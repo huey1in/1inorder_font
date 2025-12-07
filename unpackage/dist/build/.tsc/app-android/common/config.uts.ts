@@ -1,0 +1,7 @@
+// API 配置文件
+export const BASE_URL = 'https://order.yinxh.fun/api'
+// export const BASE_URL = 'http://localhost:3000/api'
+
+// 默认图片（用于后端返回数据为空时的兜底）
+export const DEFAULT_FOOD_IMAGE = 'https://order.yinxh.fun/uploads/products/default.svg'
+export const DEFAULT_AVATAR_IMAGE = 'https://order.yinxh.fun/uploads/avatars/default.svg'

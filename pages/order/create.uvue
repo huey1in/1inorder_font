@@ -1,0 +1,724 @@
+﻿<template>
+	<view class="container">
+		<!-- 用餐方式 -->
+			<view class="section">
+				<text class="section-title">用餐方式</text>
+				<view class="type-options">
+					<view
+						class="type-chip"
+						v-for="item in typeOptions"
+						:key="item.value"
+						:class="{ active: orderType === item.value }"
+						@click="changeOrderType(item.value)"
+					>
+						<text class="type-text">{{ item.label }}</text>
+					</view>
+				</view>
+			</view>
+
+		<!-- 堂食桌号（暂不启用） -->
+		<!-- <view class="section" v-if="orderType === 'dine_in'">
+			<text class="section-title">堂食桌号</text>
+			<input
+				class="table-input"
+				v-model="orderInfo.tableNumber"
+				type="text"
+				placeholder="请输入桌号，如 A5 / 12号桌"
+				confirm-type="done"
+				maxlength="20"
+			/>
+		</view> -->
+
+		<!-- 配送信息（仅外卖） -->
+		<view
+			class="section address-section"
+			@click="selectAddress"
+		>
+			<view class="section-header-row">
+				<text class="section-title">配送信息</text>
+				<text class="arrow">➜</text>
+			</view>
+			
+			<!-- 外卖显示完整地址，自取只取联系人/电话 -->
+			<template v-if="orderType === 'delivery'">
+				<view class="address-display" v-if="orderInfo.address">
+					<view class="contact-row">
+						<text class="contact-name">{{orderInfo.name}}</text>
+						<text class="contact-phone">{{orderInfo.phone}}</text>
+					</view>
+					<text class="address-text">{{orderInfo.address}}</text>
+				</view>
+				
+				<view class="address-placeholder" v-else>
+					<view class="placeholder-icon-box">
+						<image class="placeholder-icon" src="/static/icons/icon-address.svg" mode="aspectFit"></image>
+					</view>
+					<text class="placeholder-text">请选择收货地址</text>
+				</view>
+			</template>
+
+			<template v-else>
+				<view class="address-display" v-if="orderInfo.name || orderInfo.phone">
+					<view class="contact-row">
+						<text class="contact-name">{{orderInfo.name}}</text>
+						<text class="contact-phone">{{orderInfo.phone}}</text>
+					</view>
+				</view>
+				
+				<view class="address-placeholder" v-else>
+					<view class="placeholder-icon-box">
+						<image class="placeholder-icon" src="/static/icons/icon-address.svg" mode="aspectFit"></image>
+					</view>
+					<text class="placeholder-text">自取：请选择地址以填充联系人信息</text>
+				</view>
+			</template>
+		</view>
+
+		<!-- 商品列表 -->
+		<view class="section">
+			<text class="section-title">商品清单</text>
+			<view class="order-items">
+				<view class="order-item" v-for="item in cartItems" :key="item.id">
+					<image class="item-image" :src="getProductImage(item)" mode="aspectFill"></image>
+					<view class="item-info">
+						<text class="item-name">{{item.name || '商品'}}</text>
+						<view class="item-bottom">
+							<text class="item-price">￥{{item.price || 0}}</text>
+							<text class="item-qty">x{{item.quantity}}</text>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<!-- 备注 -->
+		<view class="section">
+			<text class="section-title">订单备注</text>
+			<textarea class="remark-input" v-model="orderInfo.remark" placeholder="如需备注请输入（如：少辣、不要香菜等）"></textarea>
+		</view>
+
+		<!-- 金额明细 -->
+		<view class="section amount-section">
+			<view class="amount-row">
+				<text class="amount-label">商品金额</text>
+				<text class="amount-value">￥{{subtotal.toFixed(2)}}</text>
+			</view>
+			<view class="amount-row" v-if="orderType === 'delivery'">
+				<text class="amount-label">配送费</text>
+				<text class="amount-value">￥{{deliveryFee.toFixed(2)}}</text>
+			</view>
+			<view class="amount-row hint-row" v-if="orderType === 'delivery' && shopInfo.min_order_amount > 0">
+				<text class="hint-text">起送金额 ¥{{shopInfo.min_order_amount}}</text>
+				<text class="hint-status" :class="subtotal >= shopInfo.min_order_amount ? 'success' : 'warning'">
+					{{subtotal >= shopInfo.min_order_amount ? '已满足' : '未满足'}}
+				</text>
+			</view>
+			<view class="amount-row total-row">
+				<text class="amount-label">合计</text>
+				<text class="total-value">￥{{totalAmount.toFixed(2)}}</text>
+			</view>
+		</view>
+
+		<!-- 底部提交栏 -->
+		<view class="submit-bar">
+			<view class="total-box">
+				<text class="total-label">待支付：</text>
+				<text class="total-amount">￥{{totalAmount.toFixed(2)}}</text>
+			</view>
+			<view class="submit-btn" @click="submitOrder">
+				<text class="submit-text">提交订单 ✔</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import { BASE_URL } from '@/common/config.uts'
+	
+	type CartItem = {
+		id: number,
+		product_id: number,
+		name: string,
+		price: number,
+		quantity: number,
+		images: Array<string>,
+		specs?: any,
+		notes?: string
+	}
+	
+	export default {
+		data() {
+			return {
+				cartItems: [] as Array<CartItem>,
+				orderInfo: {
+					name: '',
+					phone: '',
+					address: '',
+					remark: '',
+					tableNumber: ''
+				},
+				orderType: 'delivery',
+				typeOptions: [
+					{ value: 'delivery', label: '外卖' },
+					{ value: 'pickup', label: '自取' }
+				],
+				shopInfo: {
+					delivery_fee: 0,
+					min_order_amount: 0
+				}
+			}
+		},
+		computed: {
+			subtotal(): number {
+				return this.cartItems.reduce((sum: number, item: CartItem) => sum + (item.price || 0) * item.quantity, 0)
+			},
+			deliveryFee(): number {
+				return this.orderType === 'delivery' ? (this.shopInfo.delivery_fee || 0) : 0
+			},
+			totalAmount(): number {
+				return this.subtotal + this.deliveryFee
+			}
+		},
+		onLoad() {
+			this.fetchCart()
+			this.fetchDefaultAddress()
+			this.fetchShopInfo()
+			this.fillContactFromStorage()
+		},
+		methods: {
+			fetchShopInfo() {
+				uni.request({
+					url: `${BASE_URL}/shop/info`,
+					method: 'GET',
+					success: (res: any) => {
+						if (res.data.success && res.data.data) {
+							this.shopInfo = res.data.data
+						}
+					}
+				})
+			},
+			
+			fillContactFromStorage() {
+				const user = uni.getStorageSync('userInfo')
+				if (user) {
+					if (!this.orderInfo.name) this.orderInfo.name = user.nickname || user.username || ''
+					if (!this.orderInfo.phone && user.phone) this.orderInfo.phone = user.phone
+				}
+			},
+
+			changeOrderType(type: string) {
+				this.orderType = type
+			},
+
+			getOrderTypeLabel(type: string) {
+				const found = this.typeOptions.find((item: any) => item.value === type)
+				return found ? found.label : '外卖'
+			},
+
+			selectAddress() {
+				uni.navigateTo({ url: '/pages/address/list?select=true' })
+			},
+			
+			setAddress(address: any) {
+				this.orderInfo.name = address.contact_name || address.name
+				this.orderInfo.phone = address.contact_phone || address.phone
+				this.orderInfo.address = address.address || address.detail || ''
+			},
+			
+			fetchDefaultAddress() {
+				const token = uni.getStorageSync('token')
+				if (!token) return
+				
+				uni.request({
+					url: `${BASE_URL}/addresses/default`,
+					method: 'GET',
+					header: { 'Authorization': `Bearer ${token}` },
+					success: (res: any) => {
+						if (res.data.success && res.data.data.address) {
+							this.setAddress(res.data.data.address)
+						}
+					}
+				})
+			},
+
+			getProductImage(item: CartItem): string {
+				if (item.images && item.images.length > 0) {
+					return item.images[0]
+				}
+				return DEFAULT_FOOD_IMAGE
+			},
+			
+			fetchCart() {
+				const token = uni.getStorageSync('token')
+				if (!token) {
+					uni.navigateTo({ url: '/pages/login/login' })
+					return
+				}
+				
+				uni.request({
+					url: `${BASE_URL}/cart`,
+					method: 'GET',
+					header: { 'Authorization': `Bearer ${token}` },
+					success: (res: any) => {
+						if (res.data.success && res.data.data.cart) {
+							const items = res.data.data.cart.items || []
+							this.cartItems = items.map((item: any) => ({
+								id: item.cart_item_id,
+								product_id: item.product_id,
+								name: item.name,
+								price: item.price,
+								quantity: item.quantity,
+								images: item.images || [],
+								specs: item.specs || item.options || undefined,
+								notes: item.notes || ''
+							}))
+						}
+					}
+				})
+			},
+			
+			async submitOrder() {
+				if (this.orderType === 'delivery') {
+					if (!this.orderInfo.name || !this.orderInfo.phone || !this.orderInfo.address) {
+						uni.showToast({ title: '请先选择收货地址', icon: 'none' })
+						return
+					}
+					// 检查起送金额
+					const minAmount = this.shopInfo.min_order_amount || 0
+					if (minAmount > 0 && this.subtotal < minAmount) {
+						uni.showToast({ title: `商品金额不满足起送金额 ¥${minAmount}`, icon: 'none' })
+						return
+					}
+				}
+				if (this.orderType === 'pickup') {
+					if (!this.orderInfo.name || !this.orderInfo.phone) {
+						uni.showToast({ title: '请先选择地址或登录补全联系人', icon: 'none' })
+						return
+					}
+				}
+				if (this.cartItems.length === 0) {
+					uni.showToast({ title: '购物车为空', icon: 'none' })
+					return
+				}
+				
+				const token = uni.getStorageSync('token')
+				uni.showLoading({ title: '提交中...' })
+				
+				try {
+					const payload: any = {
+						order_type: this.orderType,
+						notes: this.orderInfo.remark,
+						items: this.cartItems.map((item: CartItem) => {
+							const mapped: any = {
+								product_id: item.product_id,
+								quantity: item.quantity
+							}
+							if (item.specs) mapped.specs = item.specs
+							if (item.notes) mapped.notes = item.notes
+							return mapped
+						}),
+						cart_item_ids: this.cartItems.map((item: CartItem) => item.id)
+					}
+
+					if (this.orderType === 'delivery') {
+						payload.delivery_address = this.orderInfo.address
+						payload.contact_name = this.orderInfo.name
+						payload.contact_phone = this.orderInfo.phone
+					} else if (this.orderType === 'pickup') {
+						payload.contact_name = this.orderInfo.name
+						payload.contact_phone = this.orderInfo.phone
+					}
+
+					const createRes: any = await new Promise((resolve, reject) => {
+						uni.request({
+							url: `${BASE_URL}/orders`,
+							method: 'POST',
+							header: {
+								'Authorization': `Bearer ${token}`,
+								'Content-Type': 'application/json'
+							},
+							data: payload,
+							success: resolve,
+							fail: reject
+						})
+					})
+
+					if (!createRes.data?.success) {
+						uni.showToast({ title: createRes.data?.message || '下单失败', icon: 'none' })
+						return
+					}
+
+					const orderId = createRes.data?.data?.order?.id || createRes.data?.data?.id || createRes.data?.data?.order_id
+					if (!orderId) {
+						uni.showToast({ title: '下单成功，但未获取订单ID', icon: 'none' })
+						uni.switchTab({ url: '/pages/order/list' })
+						return
+					}
+
+					const payRes: any = await new Promise((resolve, reject) => {
+						uni.request({
+							url: `${BASE_URL}/orders/${orderId}/pay`,
+							method: 'POST',
+							header: { 'Authorization': `Bearer ${token}` },
+							success: resolve,
+							fail: reject
+						})
+					})
+
+					if (payRes.data?.success) {
+						uni.showToast({ title: '支付成功', icon: 'success' })
+						setTimeout(() => {
+							// 详情 -> 用户返回时直接回到首页
+							uni.redirectTo({ url: `/pages/order/detail?id=${orderId}` })
+						}, 800)
+					} else {
+						uni.showToast({ title: payRes.data?.message || '支付失败', icon: 'none' })
+					}
+				} catch (e) {
+					uni.showToast({ title: '网络错误', icon: 'none' })
+				} finally {
+					uni.hideLoading()
+				}
+			}
+		}
+	}
+</script>
+
+<style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		background-color: #FFF5F8;
+		background-image: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
+					  radial-gradient(circle at 90% 80%, rgba(255, 218, 224, 0.4) 0%, transparent 20%);
+		padding-bottom: 180rpx;
+	}
+
+	.section {
+		background-color: rgba(255, 255, 255, 0.9);
+		margin: 24rpx;
+		padding: 36rpx;
+		border-radius: 40rpx;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.1);
+		backdrop-filter: blur(10px);
+	}
+
+	.section-title {
+		font-size: 32rpx;
+		font-weight: 800;
+		color: #5D4E6D;
+		border-left: 8rpx solid #FF69B4;
+		padding-left: 20rpx;
+	}
+	
+	.section-header-row {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 24rpx;
+	}
+	
+	.arrow {
+		font-size: 40rpx;
+		color: #B8A9C9;
+		font-weight: 300;
+	}
+
+	/* 用餐方式 */
+	.type-options {
+		display: flex;
+		flex-direction: row;
+		margin-top: 24rpx;
+		gap: 16rpx;
+	}
+
+	.type-chip {
+		padding: 20rpx 28rpx;
+		border-radius: 30rpx;
+		background-color: rgba(255, 255, 255, 0.8);
+		border: 2rpx solid #FFB6C1;
+		box-shadow: 0 6rpx 16rpx rgba(255, 105, 180, 0.1);
+		transition: all 0.2s;
+	}
+
+	.type-chip.active {
+		background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+		color: #fff;
+		border-color: transparent;
+		box-shadow: 0 8rpx 20rpx rgba(255, 105, 180, 0.3);
+	}
+
+	.type-text {
+		font-size: 28rpx;
+		font-weight: 700;
+		color: inherit;
+	}
+
+	/* 联系信息 */
+	.table-input {
+		margin-top: 20rpx;
+		width: 70%;
+		min-width: 400rpx;
+		padding: 20rpx 24rpx;
+		background-color: rgba(255, 255, 255, 0.8);
+		border: 2rpx solid #FFB6C1;
+		border-radius: 24rpx;
+		box-shadow: 0 6rpx 16rpx rgba(255, 105, 180, 0.08);
+		font-size: 30rpx;
+		color: #5D4E6D;
+		box-sizing: border-box;
+	}
+
+	/* 配送信息 */
+	.address-display {
+		display: flex;
+		flex-direction: column;
+		padding: 10rpx 0;
+	}
+	
+	.contact-row {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+		margin-bottom: 12rpx;
+	}
+	
+	.contact-name {
+		font-size: 34rpx;
+		font-weight: 800;
+		color: #5D4E6D;
+		margin-right: 20rpx;
+	}
+	
+	.contact-phone {
+		font-size: 28rpx;
+		color: #888;
+		font-weight: 500;
+	}
+	
+	.address-text {
+		font-size: 30rpx;
+		color: #666;
+		line-height: 1.5;
+	}
+	
+	.address-placeholder {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 20rpx 0;
+	}
+	
+	.placeholder-icon-box {
+		width: 60rpx;
+		height: 60rpx;
+		background-color: #FFF0F5;
+		border-radius: 50%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin-right: 20rpx;
+	}
+	
+	.placeholder-icon {
+		width: 32rpx;
+		height: 32rpx;
+	}
+	
+	.placeholder-text {
+		font-size: 30rpx;
+		color: #B8A9C9;
+		font-weight: 500;
+	}
+
+	/* 商品清单 */
+	.order-items {
+		padding: 0;
+	}
+
+	.order-item {
+		display: flex;
+		flex-direction: row;
+		padding: 20rpx 0;
+		border-bottom: 1px solid rgba(255, 228, 236, 0.6);
+	}
+
+	.order-item:last-child {
+		border-bottom: none;
+	}
+
+	.item-image {
+		width: 140rpx;
+		height: 140rpx;
+		border-radius: 24rpx;
+		border: 4rpx solid #FFF0F5;
+		box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+	}
+
+	.item-info {
+		flex: 1;
+		margin-left: 24rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		height: 140rpx;
+	}
+
+	.item-name {
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 700;
+	}
+
+	.item-bottom {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.item-price {
+		font-size: 32rpx;
+		color: #FF69B4;
+		font-weight: 800;
+	}
+
+	.item-qty {
+		font-size: 28rpx;
+		color: #B8A9C9;
+		font-weight: 500;
+	}
+
+	/* 备注 */
+	.remark-input {
+		width: 100%;
+		height: 180rpx;
+		background-color: #FFF5F8;
+		border-radius: 24rpx;
+		padding: 24rpx;
+		font-size: 30rpx;
+		box-sizing: border-box;
+		color: #5D4E6D;
+		border: 2px solid #FFE4EC;
+	}
+
+	/* 金额明细 */
+	.amount-section {
+		padding: 30rpx 36rpx;
+	}
+
+	.amount-row {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		padding: 16rpx 0;
+	}
+
+	.amount-label {
+		font-size: 30rpx;
+		color: #B8A9C9;
+	}
+
+	.amount-value {
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 500;
+	}
+
+	.hint-row {
+		background-color: #FFF8F0;
+		margin: 10rpx -20rpx;
+		padding: 12rpx 20rpx;
+		border-radius: 12rpx;
+	}
+
+	.hint-text {
+		font-size: 26rpx;
+		color: #B8A9C9;
+	}
+
+	.hint-status {
+		font-size: 26rpx;
+		font-weight: 600;
+	}
+
+	.hint-status.success {
+		color: #52c41a;
+	}
+
+	.hint-status.warning {
+		color: #faad14;
+	}
+
+	.total-row {
+		margin-top: 20rpx;
+		padding-top: 24rpx;
+		border-top: 2px dashed #FFE4EC;
+	}
+
+	.total-value {
+		font-size: 40rpx;
+		font-weight: 900;
+		color: #FF69B4;
+	}
+
+	/* 底部提交栏 */
+	.submit-bar {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding: 24rpx 36rpx;
+		margin: 24rpx;
+		background-color: rgba(255, 255, 255, 0.95);
+		border-radius: 40rpx;
+		box-shadow: 0 -4rpx 30rpx rgba(255, 105, 180, 0.2);
+		z-index: 100;
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.5);
+	}
+
+	.total-box {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+	}
+
+	.total-label {
+		font-size: 30rpx;
+		color: #5D4E6D;
+	}
+
+	.total-amount {
+		font-size: 44rpx;
+		font-weight: 900;
+		color: #FF69B4;
+		margin-left: 10rpx;
+	}
+
+	.submit-btn {
+		padding: 28rpx 64rpx;
+		background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+		border-radius: 40rpx;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.4);
+		transition: transform 0.2s;
+	}
+	
+	.submit-btn:active {
+		transform: scale(0.95);
+	}
+
+	.submit-text {
+		font-size: 32rpx;
+		color: #fff;
+		font-weight: 800;
+		letter-spacing: 1px;
+	}
+</style>
+

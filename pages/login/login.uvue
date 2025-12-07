@@ -1,0 +1,219 @@
+﻿<template>
+	<view class="container">
+		<view class="form">
+			<view class="input-group">
+				<image class="input-icon" src="/static/icons/icon-phone.svg" mode="aspectFit"></image>
+				<input 
+					class="input" 
+					type="number" 
+					placeholder="请输入手机号" 
+					v-model="phone"
+				/>
+			</view>
+			
+			<view class="input-group">
+				<image class="input-icon" src="/static/icons/icon-lock.svg" mode="aspectFit"></image>
+				<input 
+					class="input" 
+					type="password" 
+					placeholder="请输入密码" 
+					v-model="password"
+				/>
+			</view>
+
+			<view class="login-btn" @click="handleLogin">
+				<text class="login-btn-text">登 录 ?</text>
+			</view>
+
+			<view class="register-link" @click="goToRegister">
+				<text class="register-text">还没有账号？立即注册</text>
+			</view>
+		</view>
+
+		<view class="footer">
+			<text class="footer-text">登录即表示同意</text>
+			<text class="link-text" @click.stop="goAgreement">《用户协议》</text>
+			<text class="footer-text">和</text>
+			<text class="link-text" @click.stop="goPrivacy">《隐私政策》</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import { BASE_URL } from '@/common/config.uts'
+	
+	export default {
+		data() {
+			return {
+				phone: '',
+				password: ''
+			}
+		},
+		methods: {
+			handleLogin() {
+				if (!this.phone) {
+					uni.showToast({ title: '请输入手机号', icon: 'none' })
+					return
+				}
+				if (!this.password) {
+					uni.showToast({ title: '请输入密码', icon: 'none' })
+					return
+				}
+
+				uni.showLoading({ title: '登录中...' })
+				
+				uni.request({
+					url: `${BASE_URL}/auth/login`,
+					method: 'POST',
+					header: {
+						'Content-Type': 'application/json'
+					},
+					data: {
+						phone: this.phone,
+						password: this.password
+					},
+					success: (res: any) => {
+						if (res.data.success && res.data.data.token) {
+							uni.setStorageSync('token', res.data.data.token)
+							uni.setStorageSync('userInfo', res.data.data.user)
+							uni.showToast({ title: '登录成功', icon: 'success' })
+							setTimeout(() => {
+								uni.navigateBack()
+							}, 1500)
+						} else {
+							uni.showToast({ title: res.data.message || '登录失败', icon: 'none' })
+						}
+					},
+					fail: () => {
+						uni.showToast({ title: '网络错误', icon: 'none' })
+					},
+					complete: () => {
+						uni.hideLoading()
+					}
+				})
+			},
+			
+			goToRegister() {
+				uni.navigateTo({ url: '/pages/register/register' })
+			},
+
+			goAgreement() {
+				uni.navigateTo({ url: '/pages/legal/agreement' })
+			},
+
+			goPrivacy() {
+				uni.navigateTo({ url: '/pages/legal/privacy' })
+			}
+		}
+	}
+</script>
+
+<style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		background: linear-gradient(180deg, #FFE4EC 0%, #FFF5F8 100%);
+		background-image: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
+					  radial-gradient(circle at 90% 80%, rgba(255, 218, 224, 0.4) 0%, transparent 20%);
+		padding: 40rpx;
+	}
+
+	.form {
+		flex: 1;
+		padding: 40rpx 20rpx;
+	}
+
+	.input-group {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 30rpx 36rpx;
+		background-color: rgba(255, 255, 255, 0.8);
+		border: 2px solid #FFB6C1;
+		border-radius: 40rpx;
+		margin-bottom: 40rpx;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.1);
+		backdrop-filter: blur(10px);
+		transition: all 0.3s ease;
+	}
+
+	.input-group:focus-within {
+		border-color: #FF69B4;
+		background-color: #FFFFFF;
+		box-shadow: 0 12rpx 30rpx rgba(255, 105, 180, 0.25);
+		transform: translateY(-2px);
+	}
+
+	.input-icon {
+		width: 48rpx;
+		height: 48rpx;
+		margin-right: 24rpx;
+	}
+
+	.input {
+		flex: 1;
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 500;
+	}
+
+	.login-btn {
+		margin-top: 80rpx;
+		padding: 36rpx;
+		background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border-radius: 40rpx;
+		box-shadow: 0 10rpx 30rpx rgba(255, 105, 180, 0.4);
+		transition: transform 0.2s;
+	}
+	
+	.login-btn:active {
+		transform: scale(0.98);
+		box-shadow: 0 6rpx 20rpx rgba(255, 105, 180, 0.3);
+	}
+
+	.login-btn-text {
+		font-size: 36rpx;
+		color: #fff;
+		font-weight: 800;
+		letter-spacing: 6px;
+	}
+
+	.register-link {
+		margin-top: 50rpx;
+		display: flex;
+		justify-content: center;
+	}
+
+	.register-text {
+		font-size: 28rpx;
+		color: #FF69B4;
+		font-weight: 600;
+		text-decoration: underline;
+		text-decoration-color: rgba(255, 105, 180, 0.3);
+	}
+
+	.footer {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		flex-wrap: wrap;
+		padding: 40rpx 0;
+		opacity: 0.8;
+	}
+
+	.footer-text {
+		font-size: 24rpx;
+		color: #B8A9C9;
+	}
+
+	.link-text {
+		font-size: 24rpx;
+		color: #FF69B4;
+		margin: 0 8rpx;
+		font-weight: 600;
+	}
+</style>

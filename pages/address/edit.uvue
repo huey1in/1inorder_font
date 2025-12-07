@@ -1,0 +1,248 @@
+<template>
+	<view class="container">
+		<view class="form-card">
+			<view class="form-item">
+				<text class="label">联系人</text>
+				<input class="input" type="text" v-model="form.contact_name" placeholder="请填写收货人姓名" placeholder-class="placeholder" />
+			</view>
+			<view class="form-item">
+				<text class="label">手机号</text>
+				<input class="input" type="number" v-model="form.contact_phone" placeholder="请填写收货人手机号" placeholder-class="placeholder" maxlength="11" />
+			</view>
+			<view class="form-item">
+				<text class="label">收货地址</text>
+				<input class="input" type="text" v-model="form.address" placeholder="小区/写字楼/学校等" placeholder-class="placeholder" />
+			</view>
+			<view class="form-item">
+				<text class="label">门牌号</text>
+				<input class="input" type="text" v-model="form.detail" placeholder="例：8号楼808室" placeholder-class="placeholder" />
+			</view>
+			<view class="form-item switch-item">
+				<text class="label">设为默认地址</text>
+				<switch :checked="form.is_default" color="#FF69B4" @change="onSwitchChange" />
+			</view>
+		</view>
+
+		<view class="footer-btns">
+			<button class="save-btn" @click="saveAddress">
+				<text class="save-text">保存地址</text>
+			</button>
+			<button class="delete-btn" v-if="isEdit" @click="deleteAddress">
+				<text class="delete-text">删除地址</text>
+			</button>
+		</view>
+	</view>
+</template>
+
+<script>
+	import { BASE_URL } from '@/common/config.uts'
+
+	export default {
+		data() {
+			return {
+				isEdit: false,
+				id: '',
+				form: {
+					contact_name: '',
+					contact_phone: '',
+					address: '',
+					detail: '',
+					is_default: false
+				}
+			}
+		},
+		onLoad(options: any) {
+			if (options.id) {
+				this.isEdit = true
+				this.id = options.id
+				this.fetchAddressDetail(options.id)
+				uni.setNavigationBarTitle({ title: '♡ 编辑地址 ♡' })
+			} else {
+				uni.setNavigationBarTitle({ title: '♡ 新增地址 ♡' })
+			}
+		},
+		methods: {
+			fetchAddressDetail(id: string) {
+				const token = uni.getStorageSync('token')
+				uni.request({
+					url: `${BASE_URL}/addresses/${id}`,
+					method: 'GET',
+					header: { 'Authorization': `Bearer ${token}` },
+					success: (res: any) => {
+						if (res.data.success && res.data.data.address) {
+							const addr = res.data.data.address
+							// 适配后端返回的字段 name/phone/detail
+							this.form = {
+								contact_name: addr.name || addr.contact_name,
+								contact_phone: addr.phone || addr.contact_phone,
+								// 这里简单处理，将 detail 拆分或者直接显示
+								address: addr.detail || addr.address, 
+								detail: '', // 既然 detail 已经包含了完整地址，这里可以留空，或者尝试拆分
+								is_default: !!addr.is_default
+							}
+						}
+					}
+				})
+			},
+
+			onSwitchChange(e: any) {
+				this.form.is_default = e.detail.value
+			},
+
+			saveAddress() {
+				if (!this.form.contact_name || !this.form.contact_phone || !this.form.address) {
+					uni.showToast({ title: '请填写完整信息', icon: 'none' })
+					return
+				}
+				if (!/^1\d{10}$/.test(this.form.contact_phone)) {
+					uni.showToast({ title: '手机号格式不正确', icon: 'none' })
+					return
+				}
+
+				const token = uni.getStorageSync('token')
+				const url = this.isEdit ? `${BASE_URL}/addresses/${this.id}` : `${BASE_URL}/addresses`
+				const method = this.isEdit ? 'PUT' : 'POST'
+
+				uni.request({
+					url: url,
+					method: method,
+					header: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					data: this.form,
+					success: (res: any) => {
+						if (res.data.success) {
+							uni.showToast({ title: '保存成功', icon: 'success' })
+							setTimeout(() => {
+								uni.navigateBack()
+							}, 1500)
+						} else {
+							uni.showToast({ title: res.data.message || '保存失败', icon: 'none' })
+						}
+					}
+				})
+			},
+
+			deleteAddress() {
+				uni.showModal({
+					title: '提示',
+					content: '确定要删除这个地址吗？',
+					success: (res) => {
+						if (res.confirm) {
+							const token = uni.getStorageSync('token')
+							uni.request({
+								url: `${BASE_URL}/addresses/${this.id}`,
+								method: 'DELETE',
+								header: { 'Authorization': `Bearer ${token}` },
+								success: (res: any) => {
+									if (res.data.success) {
+										uni.showToast({ title: '删除成功', icon: 'success' })
+										setTimeout(() => {
+											uni.navigateBack()
+										}, 1500)
+									}
+								}
+							})
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.container {
+		min-height: 100vh;
+		background-color: #FFF5F8;
+		padding: 30rpx;
+	}
+
+	.form-card {
+		background-color: #FFFFFF;
+		border-radius: 30rpx;
+		padding: 0 30rpx;
+		box-shadow: 0 4rpx 16rpx rgba(255, 105, 180, 0.1);
+	}
+
+	.form-item {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 36rpx 0;
+		border-bottom: 1px solid #FFF0F5;
+	}
+
+	.form-item:last-child {
+		border-bottom: none;
+	}
+
+	.label {
+		width: 180rpx;
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 600;
+	}
+
+	.input {
+		flex: 1;
+		font-size: 30rpx;
+		color: #333;
+	}
+
+	.placeholder {
+		color: #CCC;
+	}
+
+	.switch-item {
+		justify-content: space-between;
+	}
+
+	.footer-btns {
+		margin-top: 60rpx;
+	}
+
+	.save-btn {
+		background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+		border-radius: 40rpx;
+		height: 88rpx;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border: none;
+		box-shadow: 0 8rpx 20rpx rgba(255, 105, 180, 0.3);
+		margin-bottom: 30rpx;
+	}
+	
+	.save-btn:active {
+		transform: scale(0.98);
+	}
+
+	.save-text {
+		color: #FFFFFF;
+		font-size: 32rpx;
+		font-weight: bold;
+		letter-spacing: 1px;
+	}
+
+	.delete-btn {
+		background-color: #FFFFFF;
+		border-radius: 40rpx;
+		height: 88rpx;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border: 2rpx solid #FFB6C1;
+	}
+	
+	.delete-btn:active {
+		background-color: #FFF0F5;
+	}
+
+	.delete-text {
+		color: #FF69B4;
+		font-size: 32rpx;
+		font-weight: bold;
+	}
+</style>

@@ -1,0 +1,110 @@
+@import "../../uvue.wxss";
+:host{display:flex;flex-direction:column}
+
+.container {
+		min-height: 100vh;
+		background-color: #FFF5F8;
+		padding-bottom: 120rpx;
+}
+.address-list {
+		padding: 24rpx;
+}
+.address-item {
+		background-color: #FFFFFF;
+		border-radius: 30rpx;
+		padding: 30rpx;
+		margin-bottom: 24rpx;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		box-shadow: 0 4rpx 16rpx rgba(255, 105, 180, 0.1);
+		border: 1px solid #FFF0F5;
+}
+.address-info {
+		flex: 1;
+}
+.user-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 16rpx;
+}
+.name {
+		font-size: 32rpx;
+		font-weight: 800;
+		color: #5D4E6D;
+		margin-right: 20rpx;
+}
+.phone {
+		font-size: 28rpx;
+		color: #888;
+		margin-right: 20rpx;
+}
+.tag {
+		background-color: #FF69B4;
+		padding: 4rpx 12rpx;
+		border-radius: 10rpx;
+}
+.tag-text {
+		font-size: 20rpx;
+		color: #FFFFFF;
+}
+.address-detail {
+		font-size: 28rpx;
+		color: #666;
+		line-height: 1.4;
+}
+.edit-btn {
+		padding: 20rpx;
+}
+.edit-icon {
+		width: 40rpx;
+		height: 40rpx;
+}
+.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding-top: 200rpx;
+}
+.empty-icon {
+		width: 200rpx;
+		height: 200rpx;
+		margin-bottom: 30rpx;
+		opacity: 0.5;
+}
+.empty-text {
+		font-size: 28rpx;
+		color: #B8A9C9;
+}
+.footer-btn {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 20rpx 30rpx;
+		padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+		background-color: rgba(255, 255, 255, 0.9);
+		-webkit-backdrop-filter: blur(10px);
+		        backdrop-filter: blur(10px);
+}
+.add-btn {
+		background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+		border-radius: 40rpx;
+		height: 88rpx;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border: none;
+		box-shadow: 0 8rpx 20rpx rgba(255, 105, 180, 0.3);
+}
+.add-btn:active {
+		transform: scale(0.98);
+}
+.btn-text {
+		color: #FFFFFF;
+		font-size: 32rpx;
+		font-weight: bold;
+		letter-spacing: 1px;
+}

@@ -1,0 +1,62 @@
+@import "../../uvue.wxss";
+:host{display:flex;flex-direction:column}
+
+.container {
+		min-height: 100vh;
+		background-color: #FFF5F8;
+		background-image: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
+						  radial-gradient(circle at 90% 80%, rgba(255, 218, 224, 0.4) 0%, transparent 20%);
+		padding: 20rpx 0;
+}
+.section {
+		margin: 20rpx 24rpx;
+		background-color: rgba(255, 255, 255, 0.9);
+		border-radius: 40rpx;
+		overflow: hidden;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.1);
+		-webkit-backdrop-filter: blur(10px);
+		        backdrop-filter: blur(10px);
+}
+.section-header {
+		padding: 30rpx 36rpx;
+		border-bottom: 1px solid rgba(255, 228, 236, 0.6);
+		background-color: rgba(255, 240, 245, 0.5);
+}
+.section-title {
+		font-size: 28rpx;
+		color: #B8A9C9;
+		font-weight: 600;
+}
+.menu-item {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 36rpx 40rpx;
+		border-bottom: 1px solid rgba(255, 228, 236, 0.6);
+		transition: background-color 0.2s;
+}
+.menu-item:active {
+		background-color: #FFF0F5;
+}
+.menu-item:last-child {
+		border-bottom: none;
+}
+.menu-icon {
+		width: 48rpx;
+		height: 48rpx;
+		margin-right: 24rpx;
+}
+.menu-text {
+		flex: 1;
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 500;
+}
+.menu-arrow {
+		font-size: 34rpx;
+		color: #B8A9C9;
+}
+.menu-value {
+		font-size: 28rpx;
+		color: #B8A9C9;
+}

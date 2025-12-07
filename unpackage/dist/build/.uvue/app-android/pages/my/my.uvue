@@ -1,0 +1,151 @@
+import { DEFAULT_AVATAR_IMAGE } from '@/common/config.uts';
+const __sfc__ = defineComponent({
+    data() {
+        return {
+            isLoggedIn: false,
+            defaultAvatarImage: DEFAULT_AVATAR_IMAGE,
+            userInfo: {
+                username: '',
+                nickname: '',
+                phone: '',
+                avatar: ''
+            }
+        };
+    },
+    computed: {
+        displayName(): string {
+            const info = this.userInfo || {};
+            if (info.nickname)
+                return info.nickname;
+            return '用户';
+        }
+    },
+    onShow() {
+        this.checkLoginStatus();
+    },
+    methods: {
+        checkLoginStatus() {
+            const token = uni.getStorageSync('token');
+            const userInfo = uni.getStorageSync('userInfo');
+            this.isLoggedIn = !!token;
+            if (userInfo) {
+                this.userInfo = userInfo;
+            }
+        },
+        goLogin() {
+            uni.navigateTo({ url: '/pages/login/login' });
+        },
+        goOrderList(status?: string) {
+            if (!this.isLoggedIn) {
+                uni.showToast({ title: '请先登录', icon: 'none' });
+                this.goLogin();
+                return;
+            }
+            if (status) {
+                uni.setStorageSync('orderStatus', status);
+            }
+            uni.switchTab({ url: '/pages/order/list' });
+        },
+        goAddress() {
+            if (!this.isLoggedIn) {
+                uni.showToast({ title: '请先登录', icon: 'none' });
+                this.goLogin();
+                return;
+            }
+            uni.navigateTo({ url: '/pages/address/list' });
+        },
+        goSettings() {
+            uni.navigateTo({ url: '/pages/settings/settings' });
+        },
+        handleLogout() {
+            uni.showModal({
+                title: '提示',
+                content: '确定要退出登录吗？',
+                success: (res) => {
+                    if (res.confirm) {
+                        uni.removeStorageSync('token');
+                        uni.removeStorageSync('userInfo');
+                        this.isLoggedIn = false;
+                        this.userInfo = { username: '', phone: '' };
+                        uni.showToast({ title: '已退出登录', icon: 'success' });
+                    }
+                }
+            });
+        }
+    }
+});
+export default __sfc__;
+function GenPagesMyMyRender(this: InstanceType<typeof __sfc__>): any | null {
+    const _ctx = this;
+    const _cache = this.$.renderCache;
+    return _cE("view", _uM({ class: "container" }), [
+        _cE("view", _uM({
+            class: _nC(["user-header", _ctx.isLoggedIn ? 'logged-in' : ''])
+        }), [
+            _cE("view", _uM({ class: "user-avatar" }), [
+                _cE("image", _uM({
+                    class: "avatar-img",
+                    src: _ctx.userInfo.avatar || _ctx.defaultAvatarImage,
+                    mode: "aspectFill"
+                }), null, 8 /* PROPS */, ["src"])
+            ]),
+            isTrue(_ctx.isLoggedIn)
+                ? _cE("view", _uM({
+                    key: 0,
+                    class: "user-info"
+                }), [
+                    _cE("text", _uM({ class: "nickname" }), _tD(_ctx.displayName), 1 /* TEXT */),
+                    isTrue(_ctx.userInfo.phone)
+                        ? _cE("text", _uM({
+                            key: 0,
+                            class: "phone"
+                        }), _tD(_ctx.userInfo.phone), 1 /* TEXT */)
+                        : _cC("v-if", true)
+                ])
+                : _cE("view", _uM({
+                    key: 1,
+                    class: "login-prompt",
+                    onClick: _ctx.goLogin
+                }), [
+                    _cE("text", _uM({ class: "login-text" }), "点击登录"),
+                    _cE("text", _uM({ class: "login-arrow" }), "➜")
+                ], 8 /* PROPS */, ["onClick"])
+        ], 2 /* CLASS */),
+        _cE("view", _uM({ class: "section menu-section" }), [
+            _cE("view", _uM({
+                class: "menu-item",
+                onClick: _ctx.goAddress
+            }), [
+                _cE("image", _uM({
+                    class: "menu-icon",
+                    src: "/static/icons/icon-address.svg",
+                    mode: "aspectFit"
+                })),
+                _cE("text", _uM({ class: "menu-text" }), "收货地址"),
+                _cE("text", _uM({ class: "menu-arrow" }), "➜")
+            ], 8 /* PROPS */, ["onClick"]),
+            _cE("view", _uM({
+                class: "menu-item",
+                onClick: _ctx.goSettings
+            }), [
+                _cE("image", _uM({
+                    class: "menu-icon",
+                    src: "/static/icons/icon-settings.svg",
+                    mode: "aspectFit"
+                })),
+                _cE("text", _uM({ class: "menu-text" }), "设置"),
+                _cE("text", _uM({ class: "menu-arrow" }), "➜")
+            ], 8 /* PROPS */, ["onClick"])
+        ]),
+        isTrue(_ctx.isLoggedIn)
+            ? _cE("view", _uM({
+                key: 0,
+                class: "logout-btn",
+                onClick: _ctx.handleLogout
+            }), [
+                _cE("text", _uM({ class: "logout-text" }), "退出登录")
+            ], 8 /* PROPS */, ["onClick"])
+            : _cC("v-if", true)
+    ]);
+}
+const GenPagesMyMyStyles = [_uM([["container", _pS(_uM([["backgroundColor", "#FFF5F8"]]))], ["user-header", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["paddingTop", "80rpx"], ["paddingRight", "40rpx"], ["paddingBottom", "60rpx"], ["paddingLeft", "40rpx"], ["backgroundImage", "linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)"], ["backgroundColor", "rgba(0,0,0,0)"], ["boxShadow", "0 10rpx 30rpx rgba(255, 105, 180, 0.2)"], ["position", "relative"], ["overflow", "hidden"], ["content::before", "''"], ["position::before", "absolute"], ["top::before", "-50%"], ["right::before", "-20%"], ["width::before", "150%"], ["height::before", "150%"], ["transform::before", "rotate(-15deg)"]]))], ["user-avatar", _pS(_uM([["width", "140rpx"], ["height", "140rpx"], ["borderTopWidth", "6rpx"], ["borderRightWidth", "6rpx"], ["borderBottomWidth", "6rpx"], ["borderLeftWidth", "6rpx"], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "rgba(255,255,255,0.6)"], ["borderRightColor", "rgba(255,255,255,0.6)"], ["borderBottomColor", "rgba(255,255,255,0.6)"], ["borderLeftColor", "rgba(255,255,255,0.6)"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"], ["boxShadow", "0 8rpx 24rpx rgba(255, 105, 180, 0.3)"], ["zIndex", 1], ["overflow", "hidden"]]))], ["avatar-img", _pS(_uM([["width", "100%"], ["height", "100%"]]))], ["avatar-icon", _pS(_uM([["width", "90rpx"], ["height", "90rpx"]]))], ["avatar-text", _pS(_uM([["fontSize", "56rpx"], ["color", "#FF69B4"]]))], ["user-info", _pS(_uM([["marginLeft", "30rpx"], ["display", "flex"], ["flexDirection", "column"], ["zIndex", 1]]))], ["username", _pS(_uM([["fontSize", "40rpx"], ["color", "#FFFFFF"], ["letterSpacing", 1], ["textShadow", "0 2rpx 4rpx rgba(0,0,0,0.1)"]]))], ["nickname", _pS(_uM([["fontSize", "40rpx"], ["color", "#FFFFFF"], ["letterSpacing", 1], ["textShadow", "0 2rpx 4rpx rgba(0,0,0,0.1)"]]))], ["phone", _pS(_uM([["fontSize", "28rpx"], ["color", "rgba(255,255,255,0.9)"], ["marginTop", "10rpx"]]))], ["login-prompt", _pS(_uM([["flex", 1], ["marginLeft", "30rpx"], ["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["zIndex", 1]]))], ["login-text", _pS(_uM([["fontSize", "36rpx"], ["color", "#FFFFFF"], ["letterSpacing", 1]]))], ["login-arrow", _pS(_uM([["fontSize", "44rpx"], ["color", "rgba(255,255,255,0.9)"], ["marginLeft", "16rpx"]]))], ["section", _pS(_uM([["marginTop", "30rpx"], ["marginRight", "24rpx"], ["marginBottom", "30rpx"], ["marginLeft", "24rpx"], ["backgroundColor", "rgba(255,255,255,0.9)"], ["borderTopLeftRadius", "40rpx"], ["borderTopRightRadius", "40rpx"], ["borderBottomRightRadius", "40rpx"], ["borderBottomLeftRadius", "40rpx"], ["overflow", "hidden"], ["boxShadow", "0 8rpx 24rpx rgba(255, 105, 180, 0.1)"], ["backdropFilter", "blur(10px)"]]))], ["section-header", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["justifyContent", "space-between"], ["alignItems", "center"], ["paddingTop", "30rpx"], ["paddingRight", "36rpx"], ["paddingBottom", "30rpx"], ["paddingLeft", "36rpx"], ["borderBottomWidth", 1], ["borderBottomStyle", "solid"], ["borderBottomColor", "rgba(255,228,236,0.6)"], ["backgroundColor", "rgba(255,240,245,0.5)"]]))], ["section-title", _pS(_uM([["fontSize", "32rpx"], ["color", "#5D4E6D"]]))], ["view-all", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["opacity", 0.8]]))], ["view-all-text", _pS(_uM([["fontSize", "26rpx"], ["color", "#B8A9C9"]]))], ["arrow", _pS(_uM([["fontSize", "30rpx"], ["color", "#B8A9C9"], ["marginLeft", "8rpx"]]))], ["order-status-list", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["paddingTop", "40rpx"], ["paddingRight", 0], ["paddingBottom", "40rpx"], ["paddingLeft", 0]]))], ["order-status-item", _pS(_uM([["flex", 1], ["display", "flex"], ["flexDirection", "column"], ["alignItems", "center"], ["position", "relative"], ["opacity:active", 0.7]]))], ["status-icon", _pS(_uM([["width", "64rpx"], ["height", "64rpx"], ["marginBottom", "16rpx"], ["filter", "drop-shadow(0 4rpx 8rpx rgba(255, 105, 180, 0.2))"]]))], ["status-text", _pS(_uM([["fontSize", "26rpx"], ["color", "#5D4E6D"]]))], ["menu-item", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["paddingTop", "36rpx"], ["paddingRight", "40rpx"], ["paddingBottom", "36rpx"], ["paddingLeft", "40rpx"], ["borderBottomWidth", 1], ["borderBottomStyle", "solid"], ["borderBottomColor", "rgba(255,228,236,0.6)"], ["transitionProperty", "backgroundColor"], ["transitionDuration", "0.2s"], ["backgroundColor:active", "#FFF0F5"], ["borderBottomWidth:last-child", "medium"], ["borderBottomStyle:last-child", "none"], ["borderBottomColor:last-child", "#000000"]]))], ["menu-icon", _pS(_uM([["width", "52rpx"], ["height", "52rpx"], ["marginRight", "24rpx"]]))], ["menu-text", _pS(_uM([["flex", 1], ["fontSize", "30rpx"], ["color", "#5D4E6D"]]))], ["menu-arrow", _pS(_uM([["fontSize", "34rpx"], ["color", "#B8A9C9"]]))], ["logout-btn", _pS(_uM([["marginTop", "60rpx"], ["marginRight", "40rpx"], ["marginBottom", "60rpx"], ["marginLeft", "40rpx"], ["paddingTop", "30rpx"], ["paddingRight", "30rpx"], ["paddingBottom", "30rpx"], ["paddingLeft", "30rpx"], ["backgroundColor", "#FFFFFF"], ["borderTopWidth", 2], ["borderRightWidth", 2], ["borderBottomWidth", 2], ["borderLeftWidth", 2], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "#FFB6C1"], ["borderRightColor", "#FFB6C1"], ["borderBottomColor", "#FFB6C1"], ["borderLeftColor", "#FFB6C1"], ["borderTopLeftRadius", "40rpx"], ["borderTopRightRadius", "40rpx"], ["borderBottomRightRadius", "40rpx"], ["borderBottomLeftRadius", "40rpx"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"], ["boxShadow", "0 6rpx 20rpx rgba(255, 105, 180, 0.15)"], ["transitionProperty", "transform"], ["transitionDuration", "0.2s"], ["transform:active", "scale(0.98)"], ["backgroundColor:active", "#FFF0F5"]]))], ["logout-text", _pS(_uM([["fontSize", "32rpx"], ["color", "#FF69B4"], ["letterSpacing", 1]]))], ["@TRANSITION", _uM([["menu-item", _uM([["property", "backgroundColor"], ["duration", "0.2s"]])], ["logout-btn", _uM([["property", "transform"], ["duration", "0.2s"]])]])]])];

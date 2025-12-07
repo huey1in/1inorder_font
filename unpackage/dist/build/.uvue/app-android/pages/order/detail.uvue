@@ -1,0 +1,264 @@
+import { BASE_URL, DEFAULT_FOOD_IMAGE } from '@/common/config.uts';
+const __sfc__ = defineComponent({
+    data() {
+        return {
+            orderId: 0,
+            order: {
+                items: []
+            } as any,
+            loading: false
+        };
+    },
+    computed: {
+        statusText(): string {
+            const map: Record<string, string> = {
+                'pending': '待确认',
+                'confirmed': '已确认',
+                'preparing': '制作中',
+                'ready': '待取餐',
+                'delivering': '配送中',
+                'delivered': '已完成',
+                'cancelled': '已取消'
+            };
+            return map[this.order?.status] || this.order?.status || '';
+        },
+        orderTypeLabel(): string {
+            const map: Record<string, string> = {
+                'delivery': '外卖',
+                'pickup': '自取',
+                'dine_in': '堂食'
+            };
+            return map[this.order?.order_type] || this.order?.order_type || '';
+        }
+    },
+    onLoad(options: any) {
+        if (options?.id) {
+            this.orderId = Number(options.id);
+            this.fetchDetail();
+        }
+    },
+    methods: {
+        getProductImage(item: any): string {
+            if (item.images && item.images.length > 0)
+                return item.images[0];
+            return DEFAULT_FOOD_IMAGE;
+        },
+        specString(specs: any): string {
+            if (!specs)
+                return '';
+            if (typeof specs === 'string')
+                return specs as string;
+            return Object.entries(specs).map(([k, v]): string => `${k}:${v}`).join(' ');
+        },
+        fetchDetail() {
+            const token = uni.getStorageSync('token');
+            if (!token) {
+                uni.navigateTo({ url: '/pages/login/login' });
+                return;
+            }
+            this.loading = true;
+            uni.request({
+                url: `${BASE_URL}/orders/${this.orderId}`,
+                method: 'GET',
+                header: { 'Authorization': `Bearer ${token}` },
+                success: (res: any) => {
+                    if (res.data.success && res.data.data) {
+                        const data = res.data.data;
+                        this.order = data.order || data;
+                    }
+                    else {
+                        uni.showToast({ title: res.data?.message || '获取详情失败', icon: 'none' });
+                    }
+                },
+                fail: () => {
+                    uni.showToast({ title: '网络错误', icon: 'none' });
+                },
+                complete: () => {
+                    this.loading = false;
+                }
+            });
+        },
+        payOrder() {
+            const token = uni.getStorageSync('token');
+            if (!token) {
+                uni.navigateTo({ url: '/pages/login/login' });
+                return;
+            }
+            uni.showLoading({ title: '支付中...' });
+            uni.request({
+                url: `${BASE_URL}/orders/${this.orderId}/pay`,
+                method: 'POST',
+                header: { 'Authorization': `Bearer ${token}` },
+                success: (res: any) => {
+                    if (res.data?.success) {
+                        uni.showToast({ title: '支付成功', icon: 'success' });
+                        this.fetchDetail();
+                    }
+                    else {
+                        uni.showToast({ title: res.data?.message || '支付失败', icon: 'none' });
+                    }
+                },
+                fail: () => {
+                    uni.showToast({ title: '网络错误', icon: 'none' });
+                },
+                complete: () => {
+                    uni.hideLoading();
+                }
+            });
+        },
+        deleteOrder() {
+            const token = uni.getStorageSync('token');
+            if (!token) {
+                uni.navigateTo({ url: '/pages/login/login' });
+                return;
+            }
+            uni.showModal({
+                title: '删除订单',
+                content: '确定删除该订单吗？',
+                success: (res) => {
+                    if (!res.confirm)
+                        return;
+                    uni.request({
+                        url: `${BASE_URL}/orders/${this.orderId}`,
+                        method: 'DELETE',
+                        header: { 'Authorization': `Bearer ${token}` },
+                        success: (resp: any) => {
+                            if (resp.data?.success) {
+                                uni.showToast({ title: '已删除', icon: 'success' });
+                                setTimeout(() => {
+                                    uni.switchTab({ url: '/pages/order/list' });
+                                }, 800);
+                            }
+                            else {
+                                uni.showToast({ title: resp.data?.message || '删除失败', icon: 'none' });
+                            }
+                        },
+                        fail: () => {
+                            uni.showToast({ title: '网络错误', icon: 'none' });
+                        }
+                    });
+                }
+            });
+        }
+    }
+});
+export default __sfc__;
+function GenPagesOrderDetailRender(this: InstanceType<typeof __sfc__>): any | null {
+    const _ctx = this;
+    const _cache = this.$.renderCache;
+    return _cE("view", _uM({ class: "container" }), [
+        _cE("view", _uM({ class: "section header" }), [
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "订单号"),
+                _cE("text", _uM({ class: "value mono" }), _tD(_ctx.order.order_number || '-'), 1 /* TEXT */)
+            ]),
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "状态"),
+                _cE("text", _uM({
+                    class: _nC(["value status", `status-${_ctx.order.status}`])
+                }), _tD(_ctx.statusText), 3 /* TEXT, CLASS */)
+            ]),
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "类型"),
+                _cE("text", _uM({ class: "value" }), _tD(_ctx.orderTypeLabel), 1 /* TEXT */)
+            ]),
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "下单时间"),
+                _cE("text", _uM({ class: "value" }), _tD(_ctx.order.created_at || '-'), 1 /* TEXT */)
+            ])
+        ]),
+        _cE("view", _uM({ class: "section" }), [
+            _cE("text", _uM({ class: "section-title" }), "联系信息"),
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "联系人"),
+                _cE("text", _uM({ class: "value" }), _tD(_ctx.order.contact_name || '-'), 1 /* TEXT */)
+            ]),
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "手机号"),
+                _cE("text", _uM({ class: "value" }), _tD(_ctx.order.contact_phone || '-'), 1 /* TEXT */)
+            ]),
+            _ctx.order.order_type === 'delivery'
+                ? _cE("view", _uM({
+                    key: 0,
+                    class: "row"
+                }), [
+                    _cE("text", _uM({ class: "label" }), "收货地址"),
+                    _cE("text", _uM({ class: "value" }), _tD(_ctx.order.delivery_address || '-'), 1 /* TEXT */)
+                ])
+                : _cC("v-if", true),
+            isTrue(_ctx.order.order_type === 'pickup' && _ctx.order.pickup_code)
+                ? _cE("view", _uM({
+                    key: 1,
+                    class: "row"
+                }), [
+                    _cE("text", _uM({ class: "label" }), "取餐码"),
+                    _cE("text", _uM({ class: "value strong" }), _tD(_ctx.order.pickup_code), 1 /* TEXT */)
+                ])
+                : _cC("v-if", true)
+        ]),
+        _cE("view", _uM({ class: "section" }), [
+            _cE("text", _uM({ class: "section-title" }), "商品清单"),
+            _cE(Fragment, null, RenderHelpers.renderList(_ctx.order.items, (item, __key, __index, _cached): any => {
+                return _cE("view", _uM({
+                    class: "item",
+                    key: item.id
+                }), [
+                    _cE("image", _uM({
+                        class: "item-img",
+                        src: _ctx.getProductImage(item),
+                        mode: "aspectFill"
+                    }), null, 8 /* PROPS */, ["src"]),
+                    _cE("view", _uM({ class: "item-info" }), [
+                        _cE("text", _uM({ class: "item-name" }), _tD(item.product_name || '商品'), 1 /* TEXT */),
+                        isTrue(item.specs)
+                            ? _cE("text", _uM({
+                                key: 0,
+                                class: "item-spec"
+                            }), _tD(_ctx.specString(item.specs)), 1 /* TEXT */)
+                            : _cC("v-if", true),
+                        isTrue(item.notes)
+                            ? _cE("text", _uM({
+                                key: 1,
+                                class: "item-note"
+                            }), _tD(item.notes), 1 /* TEXT */)
+                            : _cC("v-if", true),
+                        _cE("view", _uM({ class: "item-bottom" }), [
+                            _cE("text", _uM({ class: "item-price" }), "￥" + _tD(item.price), 1 /* TEXT */),
+                            _cE("text", _uM({ class: "item-qty" }), "x" + _tD(item.quantity), 1 /* TEXT */)
+                        ])
+                    ])
+                ]);
+            }), 128 /* KEYED_FRAGMENT */)
+        ]),
+        _cE("view", _uM({ class: "section" }), [
+            _cE("text", _uM({ class: "section-title" }), "金额信息"),
+            _cE("view", _uM({ class: "row" }), [
+                _cE("text", _uM({ class: "label" }), "商品金额"),
+                _cE("text", _uM({ class: "value" }), "￥" + _tD(_ctx.order.total_amount || 0), 1 /* TEXT */)
+            ]),
+            _ctx.order.order_type === 'delivery'
+                ? _cE("view", _uM({
+                    key: 0,
+                    class: "row"
+                }), [
+                    _cE("text", _uM({ class: "label" }), "配送费"),
+                    _cE("text", _uM({ class: "value" }), "￥" + _tD(_ctx.order.delivery_fee || 0), 1 /* TEXT */)
+                ])
+                : _cC("v-if", true),
+            _cE("view", _uM({ class: "row total" }), [
+                _cE("text", _uM({ class: "label" }), "合计"),
+                _cE("text", _uM({ class: "value total-amount" }), "￥" + _tD(_ctx.order.total_amount || 0), 1 /* TEXT */)
+            ])
+        ]),
+        isTrue(_ctx.order.notes)
+            ? _cE("view", _uM({
+                key: 0,
+                class: "section"
+            }), [
+                _cE("text", _uM({ class: "section-title" }), "备注"),
+                _cE("text", _uM({ class: "remark" }), _tD(_ctx.order.notes), 1 /* TEXT */)
+            ])
+            : _cC("v-if", true)
+    ]);
+}
+const GenPagesOrderDetailStyles = [_uM([["container", _pS(_uM([["backgroundColor", "#FFF5F8"], ["paddingBottom", "140rpx"]]))], ["section", _pS(_uM([["backgroundImage", "none"], ["backgroundColor", "rgba(255,255,255,0.95)"], ["marginTop", "24rpx"], ["marginRight", "24rpx"], ["marginBottom", "24rpx"], ["marginLeft", "24rpx"], ["paddingTop", "32rpx"], ["paddingRight", "32rpx"], ["paddingBottom", "32rpx"], ["paddingLeft", "32rpx"], ["borderTopLeftRadius", "36rpx"], ["borderTopRightRadius", "36rpx"], ["borderBottomRightRadius", "36rpx"], ["borderBottomLeftRadius", "36rpx"], ["boxShadow", "0 8rpx 24rpx rgba(255, 105, 180, 0.12)"], ["borderTopWidth", 1], ["borderRightWidth", 1], ["borderBottomWidth", 1], ["borderLeftWidth", 1], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "rgba(255,255,255,0.6)"], ["borderRightColor", "rgba(255,255,255,0.6)"], ["borderBottomColor", "rgba(255,255,255,0.6)"], ["borderLeftColor", "rgba(255,255,255,0.6)"]]))], ["section-title", _pS(_uM([["fontSize", "32rpx"], ["color", "#5D4E6D"], ["borderLeftWidth", "8rpx"], ["borderLeftStyle", "solid"], ["borderLeftColor", "#FF69B4"], ["paddingLeft", "18rpx"], ["marginBottom", "18rpx"]]))], ["row", _uM([[".header ", _uM([["marginBottom", "12rpx"]])], ["", _uM([["display", "flex"], ["flexDirection", "row"], ["justifyContent", "space-between"], ["alignItems", "center"], ["marginTop", "12rpx"]])]])], ["label", _pS(_uM([["fontSize", "28rpx"], ["color", "#B8A9C9"]]))], ["value", _uM([["", _uM([["fontSize", "28rpx"], ["color", "#5D4E6D"], ["textAlign", "right"]])], [".mono", _uM([["fontFamily", "monospace"]])], [".status", _uM([["color", "#FF69B4"]])], [".strong", _uM([["color", "#FF69B4"]])]])], ["status-pending", _pS(_uM([["!color", "#FF9800"]]))], ["status-confirmed", _pS(_uM([["!color", "#4CAF50"]]))], ["status-preparing", _pS(_uM([["!color", "#FF9800"]]))], ["status-ready", _pS(_uM([["!color", "#4CAF50"]]))], ["status-delivering", _pS(_uM([["!color", "#2196F3"]]))], ["status-delivered", _pS(_uM([["!color", "#9C27B0"]]))], ["status-cancelled", _pS(_uM([["!color", "#9E9E9E"]]))], ["address-display", _pS(_uM([["marginTop", "10rpx"]]))], ["item", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["marginTop", "20rpx"]]))], ["item-img", _pS(_uM([["width", "120rpx"], ["height", "120rpx"], ["borderTopLeftRadius", "20rpx"], ["borderTopRightRadius", "20rpx"], ["borderBottomRightRadius", "20rpx"], ["borderBottomLeftRadius", "20rpx"], ["borderTopWidth", "4rpx"], ["borderRightWidth", "4rpx"], ["borderBottomWidth", "4rpx"], ["borderLeftWidth", "4rpx"], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "#FFF0F5"], ["borderRightColor", "#FFF0F5"], ["borderBottomColor", "#FFF0F5"], ["borderLeftColor", "#FFF0F5"]]))], ["item-info", _pS(_uM([["flex", 1], ["marginLeft", "20rpx"]]))], ["item-name", _pS(_uM([["fontSize", "30rpx"], ["color", "#5D4E6D"], ["fontWeight", "700"]]))], ["item-spec", _pS(_uM([["fontSize", "26rpx"], ["color", "#B8A9C9"], ["marginTop", "6rpx"]]))], ["item-note", _pS(_uM([["fontSize", "26rpx"], ["color", "#B8A9C9"], ["marginTop", "6rpx"]]))], ["item-bottom", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["justifyContent", "space-between"], ["alignItems", "center"], ["marginTop", "12rpx"]]))], ["item-price", _pS(_uM([["fontSize", "30rpx"], ["color", "#FF69B4"]]))], ["item-qty", _pS(_uM([["fontSize", "26rpx"], ["color", "#B8A9C9"]]))], ["total", _pS(_uM([["marginTop", "14rpx"]]))], ["total-amount", _pS(_uM([["color", "#FF69B4"]]))], ["remark", _pS(_uM([["fontSize", "28rpx"], ["color", "#5D4E6D"]]))]])];

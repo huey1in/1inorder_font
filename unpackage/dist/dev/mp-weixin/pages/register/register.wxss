@@ -1,0 +1,101 @@
+@import "../../uvue.wxss";
+:host{display:flex;flex-direction:column}
+
+.container {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		background: linear-gradient(180deg, #FFE4EC 0%, #FFF5F8 100%);
+		background-image: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
+					  radial-gradient(circle at 90% 80%, rgba(255, 218, 224, 0.4) 0%, transparent 20%);
+		padding: 40rpx;
+		box-sizing: border-box;
+}
+.form {
+		flex: 1;
+		padding: 40rpx 20rpx;
+		box-sizing: border-box;
+}
+.input-group {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 30rpx 36rpx;
+		background-color: rgba(255, 255, 255, 0.8);
+		border: 2px solid #FFB6C1;
+		border-radius: 40rpx;
+		margin-bottom: 40rpx;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.1);
+		-webkit-backdrop-filter: blur(10px);
+		        backdrop-filter: blur(10px);
+		transition: all 0.3s ease;
+}
+.input-group:focus-within {
+		border-color: #FF69B4;
+		background-color: #FFFFFF;
+		box-shadow: 0 12rpx 30rpx rgba(255, 105, 180, 0.25);
+		transform: translateY(-2px);
+}
+.input-icon {
+		width: 48rpx;
+		height: 48rpx;
+		margin-right: 24rpx;
+}
+.input {
+		flex: 1;
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 500;
+}
+.login-btn {
+		margin-top: 80rpx;
+		padding: 36rpx;
+		background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border-radius: 40rpx;
+		box-shadow: 0 10rpx 30rpx rgba(255, 105, 180, 0.4);
+		transition: transform 0.2s;
+}
+.login-btn:active {
+		transform: scale(0.98);
+		box-shadow: 0 6rpx 20rpx rgba(255, 105, 180, 0.3);
+}
+.login-btn-text {
+		font-size: 36rpx;
+		color: #fff;
+		font-weight: 800;
+		letter-spacing: 6px;
+}
+.register-link {
+		margin-top: 50rpx;
+		display: flex;
+		justify-content: flex-start;
+}
+.register-text {
+		font-size: 28rpx;
+		color: #FF69B4;
+		font-weight: 600;
+		text-decoration: underline;
+		-webkit-text-decoration-color: rgba(255, 105, 180, 0.3);
+		        text-decoration-color: rgba(255, 105, 180, 0.3);
+}
+.footer {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		flex-wrap: wrap;
+		padding: 40rpx 0;
+		opacity: 0.8;
+}
+.footer-text {
+		font-size: 24rpx;
+		color: #B8A9C9;
+}
+.link-text {
+		font-size: 24rpx;
+		color: #FF69B4;
+		margin: 0 8rpx;
+		font-weight: 600;
+}

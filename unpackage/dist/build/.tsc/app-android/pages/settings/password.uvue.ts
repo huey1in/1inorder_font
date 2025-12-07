@@ -1,0 +1,116 @@
+
+	import { BASE_URL } from '@/common/config.uts'
+	
+	const __sfc__ = defineComponent({
+		data() {
+			return {
+				form: {
+					oldPassword: '',
+					newPassword: '',
+					confirmPassword: ''
+				}
+			}
+		},
+		methods: {
+			handleSubmit() {
+				if (!this.form.oldPassword) {
+					uni.showToast({ title: '请输入当前密码', icon: 'none' })
+					return
+				}
+				if (!this.form.newPassword) {
+					uni.showToast({ title: '请输入新密码', icon: 'none' })
+					return
+				}
+				if (this.form.newPassword.length < 6 || this.form.newPassword.length > 20) {
+					uni.showToast({ title: '密码长度为6-20位', icon: 'none' })
+					return
+				}
+				if (this.form.newPassword !== this.form.confirmPassword) {
+					uni.showToast({ title: '两次密码输入不一致', icon: 'none' })
+					return
+				}
+				
+				const token = uni.getStorageSync('token')
+				uni.showLoading({ title: '提交中...' })
+				
+				uni.request({
+					url: `${BASE_URL}/auth/change-password`,
+					method: 'POST',
+					header: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					data: {
+						currentPassword: this.form.oldPassword,
+						newPassword: this.form.newPassword
+					},
+					success: (res: any) => {
+						if (res.data.success) {
+							uni.showToast({ title: '密码修改成功', icon: 'success' })
+							setTimeout(() => {
+								uni.navigateBack()
+							}, 1500)
+						} else {
+							uni.showToast({ title: res.data.message || '修改失败', icon: 'none' })
+						}
+					},
+					fail: () => {
+						uni.showToast({ title: '网络错误', icon: 'none' })
+					},
+					complete: () => {
+						uni.hideLoading()
+					}
+				})
+			}
+		}
+	})
+
+export default __sfc__
+function GenPagesSettingsPasswordRender(this: InstanceType<typeof __sfc__>): any | null {
+const _ctx = this
+const _cache = this.$.renderCache
+  return _cE("view", _uM({ class: "container" }), [
+    _cE("view", _uM({ class: "form-section" }), [
+      _cE("view", _uM({ class: "form-item" }), [
+        _cE("text", _uM({ class: "label" }), "当前密码"),
+        _cE("input", _uM({
+          class: "input",
+          type: "password",
+          modelValue: _ctx.form.oldPassword,
+          onInput: ($event: UniInputEvent) => {(_ctx.form.oldPassword) = $event.detail.value},
+          placeholder: "请输入当前密码",
+          "placeholder-class": "placeholder"
+        }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"])
+      ]),
+      _cE("view", _uM({ class: "form-item" }), [
+        _cE("text", _uM({ class: "label" }), "新密码"),
+        _cE("input", _uM({
+          class: "input",
+          type: "password",
+          modelValue: _ctx.form.newPassword,
+          onInput: ($event: UniInputEvent) => {(_ctx.form.newPassword) = $event.detail.value},
+          placeholder: "请输入新密码（6-20位）",
+          "placeholder-class": "placeholder"
+        }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"])
+      ]),
+      _cE("view", _uM({ class: "form-item" }), [
+        _cE("text", _uM({ class: "label" }), "确认密码"),
+        _cE("input", _uM({
+          class: "input",
+          type: "password",
+          modelValue: _ctx.form.confirmPassword,
+          onInput: ($event: UniInputEvent) => {(_ctx.form.confirmPassword) = $event.detail.value},
+          placeholder: "请再次输入新密码",
+          "placeholder-class": "placeholder"
+        }), null, 40 /* PROPS, NEED_HYDRATION */, ["modelValue", "onInput"])
+      ])
+    ]),
+    _cE("view", _uM({
+      class: "submit-btn",
+      onClick: _ctx.handleSubmit
+    }), [
+      _cE("text", _uM({ class: "submit-text" }), "确认修改")
+    ], 8 /* PROPS */, ["onClick"])
+  ])
+}
+const GenPagesSettingsPasswordStyles = [_uM([["container", _pS(_uM([["backgroundColor", "#FFF5F8"], ["paddingTop", "30rpx"], ["paddingRight", "24rpx"], ["paddingBottom", "30rpx"], ["paddingLeft", "24rpx"]]))], ["form-section", _pS(_uM([["backgroundColor", "rgba(255,255,255,0.9)"], ["borderTopLeftRadius", "40rpx"], ["borderTopRightRadius", "40rpx"], ["borderBottomRightRadius", "40rpx"], ["borderBottomLeftRadius", "40rpx"], ["overflow", "hidden"], ["boxShadow", "0 8rpx 24rpx rgba(255, 105, 180, 0.1)"], ["backdropFilter", "blur(10px)"]]))], ["form-item", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["paddingTop", "36rpx"], ["paddingRight", "40rpx"], ["paddingBottom", "36rpx"], ["paddingLeft", "40rpx"], ["borderBottomWidth", 1], ["borderBottomStyle", "solid"], ["borderBottomColor", "rgba(255,228,236,0.6)"], ["borderBottomWidth:last-child", "medium"], ["borderBottomStyle:last-child", "none"], ["borderBottomColor:last-child", "#000000"]]))], ["label", _pS(_uM([["width", "160rpx"], ["fontSize", "30rpx"], ["color", "#5D4E6D"]]))], ["input", _pS(_uM([["flex", 1], ["fontSize", "30rpx"], ["color", "#5D4E6D"]]))], ["placeholder", _pS(_uM([["color", "#B8A9C9"]]))], ["submit-btn", _pS(_uM([["marginTop", "60rpx"], ["paddingTop", "32rpx"], ["paddingRight", "32rpx"], ["paddingBottom", "32rpx"], ["paddingLeft", "32rpx"], ["backgroundImage", "linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%)"], ["backgroundColor", "rgba(0,0,0,0)"], ["borderTopLeftRadius", "40rpx"], ["borderTopRightRadius", "40rpx"], ["borderBottomRightRadius", "40rpx"], ["borderBottomLeftRadius", "40rpx"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"], ["boxShadow", "0 8rpx 24rpx rgba(255, 105, 180, 0.3)"], ["transform:active", "scale(0.98)"]]))], ["submit-text", _pS(_uM([["fontSize", "32rpx"], ["color", "#FFFFFF"], ["letterSpacing", 2]]))]])]

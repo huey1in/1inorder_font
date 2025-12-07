@@ -1,0 +1,204 @@
+<template>
+	<view class="container">
+		<!-- 账号安全 -->
+		<view class="section">
+			<view class="section-header">
+				<text class="section-title">账号安全</text>
+			</view>
+			<view class="menu-item" @click="goChangePassword">
+				<image class="menu-icon" src="/static/icons/icon-password.svg" mode="aspectFit"></image>
+				<text class="menu-text">修改密码</text>
+				<text class="menu-arrow">➜</text>
+			</view>
+			<view class="menu-item" @click="goEditProfile">
+				<image class="menu-icon" src="/static/icons/icon-profile.svg" mode="aspectFit"></image>
+				<text class="menu-text">个人资料</text>
+				<text class="menu-arrow">➜</text>
+			</view>
+		</view>
+
+		<!-- 关于 -->
+		<view class="section">
+			<view class="section-header">
+				<text class="section-title">关于</text>
+			</view>
+			<view class="menu-item" @click="goAgreement">
+				<image class="menu-icon" src="/static/icons/icon-agreement.svg" mode="aspectFit"></image>
+				<text class="menu-text">用户协议</text>
+				<text class="menu-arrow">➜</text>
+			</view>
+			<view class="menu-item" @click="goPrivacy">
+				<image class="menu-icon" src="/static/icons/icon-privacy.svg" mode="aspectFit"></image>
+				<text class="menu-text">隐私政策</text>
+				<text class="menu-arrow">➜</text>
+			</view>
+			<view class="menu-item">
+				<image class="menu-icon" src="/static/icons/icon-version.svg" mode="aspectFit"></image>
+				<text class="menu-text">当前版本</text>
+				<text class="menu-value">v1.0.0</text>
+			</view>
+		</view>
+
+		<!-- 清除缓存 -->
+		<view class="section">
+			<view class="menu-item" @click="clearCache">
+				<image class="menu-icon" src="/static/icons/icon-clear.svg" mode="aspectFit"></image>
+				<text class="menu-text">清除缓存</text>
+				<text class="menu-value">{{cacheSize}}</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				cacheSize: '0KB'
+			}
+		},
+		onLoad() {
+			this.getCacheSize()
+		},
+		methods: {
+			getCacheSize() {
+				// 获取缓存大小（模拟）
+				try {
+					const info = uni.getStorageInfoSync()
+					if (info && info.currentSize) {
+						const size = info.currentSize
+						if (size < 1024) {
+							this.cacheSize = size + 'KB'
+						} else {
+							this.cacheSize = (size / 1024).toFixed(2) + 'MB'
+						}
+					}
+				} catch (e) {
+					this.cacheSize = '0KB'
+				}
+			},
+			
+			goChangePassword() {
+				const token = uni.getStorageSync('token')
+				if (!token) {
+					uni.showToast({ title: '请先登录', icon: 'none' })
+					uni.navigateTo({ url: '/pages/login/login' })
+					return
+				}
+				uni.navigateTo({ url: '/pages/settings/password' })
+			},
+			
+			goEditProfile() {
+				const token = uni.getStorageSync('token')
+				if (!token) {
+					uni.showToast({ title: '请先登录', icon: 'none' })
+					uni.navigateTo({ url: '/pages/login/login' })
+					return
+				}
+				uni.navigateTo({ url: '/pages/settings/profile' })
+			},
+			
+			goAgreement() {
+				uni.navigateTo({ url: '/pages/legal/agreement' })
+			},
+			
+			goPrivacy() {
+				uni.navigateTo({ url: '/pages/legal/privacy' })
+			},
+			
+			clearCache() {
+				uni.showModal({
+					title: '提示',
+					content: '确定要清除缓存吗？',
+					success: (res) => {
+						if (res.confirm) {
+							// 保留登录信息
+							const token = uni.getStorageSync('token')
+							const userInfo = uni.getStorageSync('userInfo')
+							
+							uni.clearStorageSync()
+							
+							// 恢复登录信息
+							if (token) uni.setStorageSync('token', token)
+							if (userInfo) uni.setStorageSync('userInfo', userInfo)
+							
+							this.cacheSize = '0KB'
+							uni.showToast({ title: '缓存已清除', icon: 'success' })
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.container {
+		min-height: 100vh;
+		background-color: #FFF5F8;
+		background-image: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
+						  radial-gradient(circle at 90% 80%, rgba(255, 218, 224, 0.4) 0%, transparent 20%);
+		padding: 20rpx 0;
+	}
+
+	.section {
+		margin: 20rpx 24rpx;
+		background-color: rgba(255, 255, 255, 0.9);
+		border-radius: 40rpx;
+		overflow: hidden;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.1);
+		backdrop-filter: blur(10px);
+	}
+
+	.section-header {
+		padding: 30rpx 36rpx;
+		border-bottom: 1px solid rgba(255, 228, 236, 0.6);
+		background-color: rgba(255, 240, 245, 0.5);
+	}
+
+	.section-title {
+		font-size: 28rpx;
+		color: #B8A9C9;
+		font-weight: 600;
+	}
+
+	.menu-item {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 36rpx 40rpx;
+		border-bottom: 1px solid rgba(255, 228, 236, 0.6);
+		transition: background-color 0.2s;
+	}
+
+	.menu-item:active {
+		background-color: #FFF0F5;
+	}
+
+	.menu-item:last-child {
+		border-bottom: none;
+	}
+
+	.menu-icon {
+		width: 48rpx;
+		height: 48rpx;
+		margin-right: 24rpx;
+	}
+
+	.menu-text {
+		flex: 1;
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 500;
+	}
+
+	.menu-arrow {
+		font-size: 34rpx;
+		color: #B8A9C9;
+	}
+
+	.menu-value {
+		font-size: 28rpx;
+		color: #B8A9C9;
+	}
+</style>

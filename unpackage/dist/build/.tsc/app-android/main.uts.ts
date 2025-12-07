@@ -1,0 +1,71 @@
+import App from './App.uvue'
+
+import { createSSRApp } from 'vue'
+export function createApp() {
+	const app = createSSRApp(App)
+	return {
+		app
+	}
+}
+export function main(app: IApp) {
+    definePageRoutes();
+    defineAppConfig();
+    (createApp()['app'] as VueApp).mount(app, GenUniApp());
+}
+
+export class UniAppConfig extends io.dcloud.uniapp.appframe.AppConfig {
+    override name: string = "1"
+    override appid: string = "__UNI__9239644"
+    override versionName: string = "1.0.0"
+    override versionCode: string = "100"
+    override uniCompilerVersion: string = "4.76"
+    
+    constructor() { super() }
+}
+
+import GenPagesIndexIndexClass from './pages/index/index.uvue'
+import GenPagesCartCartClass from './pages/cart/cart.uvue'
+import GenPagesMyMyClass from './pages/my/my.uvue'
+import GenPagesLoginLoginClass from './pages/login/login.uvue'
+import GenPagesRegisterRegisterClass from './pages/register/register.uvue'
+import GenPagesProductDetailClass from './pages/product/detail.uvue'
+import GenPagesOrderCreateClass from './pages/order/create.uvue'
+import GenPagesOrderListClass from './pages/order/list.uvue'
+import GenPagesOrderDetailClass from './pages/order/detail.uvue'
+import GenPagesAddressListClass from './pages/address/list.uvue'
+import GenPagesAddressEditClass from './pages/address/edit.uvue'
+import GenPagesLegalAgreementClass from './pages/legal/agreement.uvue'
+import GenPagesLegalPrivacyClass from './pages/legal/privacy.uvue'
+import GenPagesSettingsSettingsClass from './pages/settings/settings.uvue'
+import GenPagesSettingsPasswordClass from './pages/settings/password.uvue'
+import GenPagesSettingsProfileClass from './pages/settings/profile.uvue'
+function definePageRoutes() {
+__uniRoutes.push({ path: "pages/index/index", component: GenPagesIndexIndexClass, meta: { isQuit: true } as UniPageMeta, style: _uM([["navigationBarTitleText","首页"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/cart/cart", component: GenPagesCartCartClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","购物车"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/my/my", component: GenPagesMyMyClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","我的"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/login/login", component: GenPagesLoginLoginClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","登录"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/register/register", component: GenPagesRegisterRegisterClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","注册"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/product/detail", component: GenPagesProductDetailClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","商品详情"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/order/create", component: GenPagesOrderCreateClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","确认订单"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/order/list", component: GenPagesOrderListClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","我的订单"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/order/detail", component: GenPagesOrderDetailClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","订单详情"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/address/list", component: GenPagesAddressListClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","收货地址"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/address/edit", component: GenPagesAddressEditClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","编辑地址"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/legal/agreement", component: GenPagesLegalAgreementClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","用户协议"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/legal/privacy", component: GenPagesLegalPrivacyClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","隐私政策"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/settings/settings", component: GenPagesSettingsSettingsClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","设置"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/settings/password", component: GenPagesSettingsPasswordClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","修改密码"]]) } as UniPageRoute)
+__uniRoutes.push({ path: "pages/settings/profile", component: GenPagesSettingsProfileClass, meta: { isQuit: false } as UniPageMeta, style: _uM([["navigationBarTitleText","个人资料"]]) } as UniPageRoute)
+}
+const __uniTabBar: Map<string, any | null> | null = _uM([["color","#B8A9C9"],["selectedColor","#FF69B4"],["backgroundColor","#FFFFFF"],["borderStyle","white"],["list",[_uM([["pagePath","pages/index/index"],["text","首页"],["iconPath","static/tabbar/home.png"],["selectedIconPath","static/tabbar/home-active.png"]]),_uM([["pagePath","pages/order/list"],["text","订单"],["iconPath","static/tabbar/order.png"],["selectedIconPath","static/tabbar/order-active.png"]]),_uM([["pagePath","pages/my/my"],["text","我的"],["iconPath","static/tabbar/my.png"],["selectedIconPath","static/tabbar/my-active.png"]])]]])
+const __uniLaunchPage: Map<string, any | null> = _uM([["url","pages/index/index"],["style",_uM([["navigationBarTitleText","首页"]])]])
+function defineAppConfig(){
+  __uniConfig.entryPagePath = '/pages/index/index'
+  __uniConfig.globalStyle = _uM([["navigationBarTextStyle","white"],["navigationBarTitleText","美食"],["navigationBarBackgroundColor","#FF69B4"],["backgroundColor","#FFF5F8"]])
+  __uniConfig.getTabBarConfig = ():Map<string, any> | null =>  _uM([["color","#B8A9C9"],["selectedColor","#FF69B4"],["backgroundColor","#FFFFFF"],["borderStyle","white"],["list",[_uM([["pagePath","pages/index/index"],["text","首页"],["iconPath","static/tabbar/home.png"],["selectedIconPath","static/tabbar/home-active.png"]]),_uM([["pagePath","pages/order/list"],["text","订单"],["iconPath","static/tabbar/order.png"],["selectedIconPath","static/tabbar/order-active.png"]]),_uM([["pagePath","pages/my/my"],["text","我的"],["iconPath","static/tabbar/my.png"],["selectedIconPath","static/tabbar/my-active.png"]])]]])
+  __uniConfig.tabBar = __uniConfig.getTabBarConfig()
+  __uniConfig.conditionUrl = ''
+  __uniConfig.uniIdRouter = _uM()
+  
+  __uniConfig.ready = true
+}

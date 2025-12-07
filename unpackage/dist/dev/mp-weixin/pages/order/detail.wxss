@@ -1,0 +1,131 @@
+@import "../../uvue.wxss";
+:host{display:flex;flex-direction:column}
+
+.container {
+		min-height: 100vh;
+		background-color: #FFF5F8;
+		padding-bottom: 140rpx;
+}
+.section {
+		background: rgba(255, 255, 255, 0.95);
+		margin: 24rpx;
+		padding: 32rpx;
+		border-radius: 36rpx;
+		box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.12);
+		border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.section-title {
+		font-size: 32rpx;
+		font-weight: 800;
+		color: #5D4E6D;
+		border-left: 8rpx solid #FF69B4;
+		padding-left: 18rpx;
+		margin-bottom: 18rpx;
+}
+.header .row {
+		margin-bottom: 12rpx;
+}
+.row {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 12rpx;
+}
+.label {
+		font-size: 28rpx;
+		color: #B8A9C9;
+}
+.value {
+		font-size: 28rpx;
+		color: #5D4E6D;
+		font-weight: 600;
+		text-align: right;
+}
+.value.mono {
+		font-family: monospace;
+}
+.value.status {
+		color: #FF69B4;
+}
+.status-pending {
+		color: #FF9800 !important;
+}
+.status-confirmed {
+		color: #4CAF50 !important;
+}
+.status-preparing {
+		color: #FF9800 !important;
+}
+.status-ready {
+		color: #4CAF50 !important;
+}
+.status-delivering {
+		color: #2196F3 !important;
+}
+.status-delivered {
+		color: #9C27B0 !important;
+}
+.status-cancelled {
+		color: #9E9E9E !important;
+}
+.value.strong {
+		color: #FF69B4;
+		font-weight: 800;
+}
+.address-display {
+		margin-top: 10rpx;
+}
+.item {
+		display: flex;
+		flex-direction: row;
+		margin-top: 20rpx;
+}
+.item-img {
+		width: 120rpx;
+		height: 120rpx;
+		border-radius: 20rpx;
+		border: 4rpx solid #FFF0F5;
+}
+.item-info {
+		flex: 1;
+		margin-left: 20rpx;
+}
+.item-name {
+		font-size: 30rpx;
+		color: #5D4E6D;
+		font-weight: 700;
+}
+.item-spec, .item-note {
+		font-size: 26rpx;
+		color: #B8A9C9;
+		margin-top: 6rpx;
+}
+.item-bottom {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 12rpx;
+}
+.item-price {
+		font-size: 30rpx;
+		color: #FF69B4;
+		font-weight: 800;
+}
+.item-qty {
+		font-size: 26rpx;
+		color: #B8A9C9;
+}
+.total {
+		margin-top: 14rpx;
+}
+.total-amount {
+		color: #FF69B4;
+		font-weight: 900;
+}
+.remark {
+		font-size: 28rpx;
+		color: #5D4E6D;
+}
+

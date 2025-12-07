@@ -1,0 +1,55 @@
+/**
+ * Sanrio Kitty Pink Theme Variables - High End Edition
+ */
+
+/* 颜色变量 - 三丽鸥粉色系 */
+$uni-color-primary: #FF69B4; // Hot Pink
+$uni-color-primary-light: #FFB7C5; // Light Pink
+$uni-color-primary-dark: #FF1493; // Deep Pink
+$uni-color-secondary: #FFF0F5; // Lavender Blush
+$uni-color-accent: #FFD1DC; // Pastel Pink
+
+$uni-color-success: #98D8AA; // Mint Green
+$uni-color-warning: #FFD93D; // Soft Yellow
+$uni-color-error: #FF6B6B; // Soft Red
+
+/* 文字基本颜色 */
+$uni-text-color: #5D4E6D; // Purple-gray
+$uni-text-color-inverse: #FFFFFF;
+$uni-text-color-grey: #B8A9C9; // Light purple
+$uni-text-color-placeholder: #D4C4E3;
+$uni-text-color-disable: #E8DCF0;
+
+/* 背景颜色 */
+$uni-bg-color: #FFF5F8; // Light pink background
+$uni-bg-color-grey: #FFFFFF; // White card
+$uni-bg-color-hover: #FFE4EC;
+$uni-bg-color-mask: rgba(255, 182, 193, 0.5);
+$uni-bg-glass: rgba(255, 255, 255, 0.8); // Glassmorphism
+
+/* 边框颜色 */
+$uni-border-color: #FFB6C1; // Light pink
+
+/* 尺寸变量 */
+$uni-font-size-sm: 12px;
+$uni-font-size-base: 14px;
+$uni-font-size-lg: 16px;
+
+/* Border Radius - Sanrio style is cute and rounded */
+$uni-border-radius-sm: 16rpx;
+$uni-border-radius-base: 24rpx;
+$uni-border-radius-lg: 40rpx;
+$uni-border-radius-circle: 50%;
+
+/* Shadows - Soft and dreamy */
+$uni-shadow-sm: 0 4rpx 12rpx rgba(255, 105, 180, 0.15);
+$uni-shadow-base: 0 8rpx 24rpx rgba(255, 105, 180, 0.2);
+$uni-shadow-lg: 0 12rpx 32rpx rgba(255, 105, 180, 0.25);
+
+/* Spacing */
+$uni-spacing-row-sm: 5px;
+$uni-spacing-row-base: 10px;
+$uni-spacing-row-lg: 15px;
+$uni-spacing-col-sm: 4px;
+$uni-spacing-col-base: 8px;
+$uni-spacing-col-lg: 12px;

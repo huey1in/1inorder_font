@@ -1,0 +1,272 @@
+import { BASE_URL, DEFAULT_FOOD_IMAGE } from '@/common/config.uts';
+type CartItem = {
+    id: number;
+    product_id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    images: Array<string>;
+    selected: boolean;
+};
+const __sfc__ = defineComponent({
+    data() {
+        return {
+            cartItems: [] as Array<CartItem>
+        };
+    },
+    computed: {
+        allSelected(): boolean {
+            return this.cartItems.length > 0 && this.cartItems.every((item: CartItem): boolean => item.selected);
+        },
+        selectedCount(): number {
+            return this.cartItems.filter((item: CartItem): boolean => item.selected).reduce((sum: number, item: CartItem): number => sum + item.quantity, 0);
+        },
+        totalAmount(): number {
+            return this.cartItems
+                .filter((item: CartItem): boolean => item.selected)
+                .reduce((sum: number, item: CartItem): number => sum + (item.price || 0) * item.quantity, 0);
+        }
+    },
+    onShow() {
+        console.log('购物车页面 onShow 触发');
+        this.fetchCart();
+    },
+    onLoad() {
+        console.log('购物车页面 onLoad 触发');
+        this.fetchCart();
+    },
+    methods: {
+        getProductImage(item: CartItem): string {
+            if (item.images && item.images.length > 0) {
+                return item.images[0];
+            }
+            return DEFAULT_FOOD_IMAGE;
+        },
+        fetchCart() {
+            console.log('fetchCart 开始执行');
+            const token = uni.getStorageSync('token');
+            console.log('token:', token ? '已获取' : '未获取');
+            if (!token) {
+                console.log('未登录，跳转到登录页');
+                uni.showToast({ title: '请先登录', icon: 'none' });
+                setTimeout(() => {
+                    uni.navigateTo({ url: '/pages/login/login' });
+                }, 1500);
+                return;
+            }
+            uni.showLoading({ title: '加载中...' });
+            console.log('开始请求购物车接口');
+            uni.request({
+                url: `${BASE_URL}/cart`,
+                method: 'GET',
+                header: { 'Authorization': `Bearer ${token}` },
+                success: (res: any) => {
+                    console.log('购物车接口响应:', JSON.stringify(res.data));
+                    if (res.data.success && res.data.data.cart) {
+                        const items = res.data.data.cart.items || [];
+                        // 映射后端数据到前端结构
+                        this.cartItems = items.map((item: any): UTSJSONObject => ({
+                            id: item.cart_item_id,
+                            product_id: item.product_id,
+                            name: item.name,
+                            price: item.price,
+                            quantity: item.quantity,
+                            images: item.images || [],
+                            selected: true
+                        }));
+                        console.log('处理后的购物车数据:', JSON.stringify(this.cartItems));
+                    }
+                },
+                fail: () => {
+                    uni.showToast({ title: '加载失败', icon: 'none' });
+                },
+                complete: () => {
+                    uni.hideLoading();
+                }
+            });
+        },
+        toggleSelect(item: CartItem) {
+            item.selected = !item.selected;
+        },
+        toggleSelectAll() {
+            const newStatus = !this.allSelected;
+            this.cartItems.forEach((item: CartItem) => {
+                item.selected = newStatus;
+            });
+        },
+        changeQuantity(item: CartItem, delta: number) {
+            const newQty = item.quantity + delta;
+            if (newQty < 1)
+                return;
+            const token = uni.getStorageSync('token');
+            uni.request({
+                url: `${BASE_URL}/cart/item/${item.id}`,
+                method: 'PATCH',
+                header: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                data: {
+                    quantity: newQty
+                },
+                success: (res: any) => {
+                    if (res.data.success) {
+                        item.quantity = newQty;
+                    }
+                }
+            });
+        },
+        removeItem(item: CartItem) {
+            uni.showModal({
+                title: '确认删除',
+                content: '确定要删除该商品吗？',
+                success: (res) => {
+                    if (res.confirm) {
+                        const token = uni.getStorageSync('token');
+                        uni.request({
+                            url: `${BASE_URL}/cart/item/${item.id}`,
+                            method: 'DELETE',
+                            header: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            success: (res: any) => {
+                                if (res.data.success) {
+                                    const index = this.cartItems.indexOf(item);
+                                    if (index > -1) {
+                                        this.cartItems.splice(index, 1);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        },
+        checkout() {
+            const selectedItems = this.cartItems.filter((item: CartItem): boolean => item.selected);
+            if (selectedItems.length === 0) {
+                uni.showToast({ title: '请选择商品', icon: 'none' });
+                return;
+            }
+            uni.navigateTo({ url: '/pages/order/create' });
+        },
+        goShopping() {
+            uni.navigateBack();
+        }
+    }
+});
+export default __sfc__;
+function GenPagesCartCartRender(this: InstanceType<typeof __sfc__>): any | null {
+    const _ctx = this;
+    const _cache = this.$.renderCache;
+    return _cE("view", _uM({ class: "container" }), [
+        _ctx.cartItems.length === 0
+            ? _cE("view", _uM({
+                key: 0,
+                class: "empty-cart"
+            }), [
+                _cE("image", _uM({
+                    class: "empty-icon",
+                    src: "/static/icons/icon-cart.svg",
+                    mode: "aspectFit"
+                })),
+                _cE("text", _uM({ class: "empty-text" }), "购物车空空的~"),
+                _cE("view", _uM({
+                    class: "go-shopping",
+                    onClick: _ctx.goShopping
+                }), [
+                    _cE("text", _uM({ class: "go-shopping-text" }), "去逛逛 ♡")
+                ], 8 /* PROPS */, ["onClick"])
+            ])
+            : _cC("v-if", true),
+        _ctx.cartItems.length > 0
+            ? _cE("scroll-view", _uM({
+                key: 1,
+                class: "cart-list",
+                "scroll-y": ""
+            }), [
+                _cE(Fragment, null, RenderHelpers.renderList(_ctx.cartItems, (item, __key, __index, _cached): any => {
+                    return _cE("view", _uM({
+                        class: "cart-item",
+                        key: item.id
+                    }), [
+                        _cE("view", _uM({
+                            class: "checkbox",
+                            onClick: () => { _ctx.toggleSelect(item); }
+                        }), [
+                            _cE("text", _uM({
+                                class: _nC(['check-icon', item.selected ? 'checked' : ''])
+                            }), _tD(item.selected ? '♡' : ''), 3 /* TEXT, CLASS */)
+                        ], 8 /* PROPS */, ["onClick"]),
+                        _cE("image", _uM({
+                            class: "item-image",
+                            src: _ctx.getProductImage(item),
+                            mode: "aspectFill"
+                        }), null, 8 /* PROPS */, ["src"]),
+                        _cE("view", _uM({ class: "item-info" }), [
+                            _cE("text", _uM({ class: "item-name" }), _tD(item.name || '商品'), 1 /* TEXT */),
+                            _cE("text", _uM({ class: "item-price" }), "¥" + _tD(item.price || 0), 1 /* TEXT */),
+                            _cE("view", _uM({ class: "quantity-box" }), [
+                                _cE("view", _uM({
+                                    class: "qty-btn",
+                                    onClick: () => { _ctx.changeQuantity(item, -1); }
+                                }), [
+                                    _cE("text", _uM({ class: "qty-btn-text" }), "-")
+                                ], 8 /* PROPS */, ["onClick"]),
+                                _cE("text", _uM({ class: "qty-num" }), _tD(item.quantity), 1 /* TEXT */),
+                                _cE("view", _uM({
+                                    class: "qty-btn",
+                                    onClick: () => { _ctx.changeQuantity(item, 1); }
+                                }), [
+                                    _cE("text", _uM({ class: "qty-btn-text" }), "+")
+                                ], 8 /* PROPS */, ["onClick"])
+                            ])
+                        ]),
+                        _cE("view", _uM({
+                            class: "delete-btn",
+                            onClick: () => { _ctx.removeItem(item); }
+                        }), [
+                            _cE("image", _uM({
+                                class: "delete-icon",
+                                src: "/static/icons/icon-delete.svg",
+                                mode: "aspectFit"
+                            }))
+                        ], 8 /* PROPS */, ["onClick"])
+                    ]);
+                }), 128 /* KEYED_FRAGMENT */)
+            ])
+            : _cC("v-if", true),
+        _ctx.cartItems.length > 0
+            ? _cE("view", _uM({
+                key: 2,
+                class: "checkout-bar"
+            }), [
+                _cE("view", _uM({
+                    class: "select-all",
+                    onClick: _ctx.toggleSelectAll
+                }), [
+                    _cE("view", _uM({
+                        class: _nC(['checkbox-icon', _ctx.allSelected ? 'checked' : ''])
+                    }), [
+                        isTrue(_ctx.allSelected)
+                            ? _cE("text", _uM({ key: 0 }), "♡")
+                            : _cC("v-if", true)
+                    ], 2 /* CLASS */),
+                    _cE("text", _uM({ class: "select-all-text" }), "全选")
+                ], 8 /* PROPS */, ["onClick"]),
+                _cE("view", _uM({ class: "total-info" }), [
+                    _cE("text", _uM({ class: "total-label" }), "合计:"),
+                    _cE("text", _uM({ class: "total-amount" }), "¥" + _tD(_ctx.totalAmount.toFixed(2)), 1 /* TEXT */)
+                ]),
+                _cE("view", _uM({
+                    class: "checkout-btn",
+                    onClick: _ctx.checkout
+                }), [
+                    _cE("text", _uM({ class: "checkout-text" }), "去结算(" + _tD(_ctx.selectedCount) + ") ♡", 1 /* TEXT */)
+                ], 8 /* PROPS */, ["onClick"])
+            ])
+            : _cC("v-if", true)
+    ]);
+}
+const GenPagesCartCartStyles = [_uM([["container", _pS(_uM([["display", "flex"], ["flexDirection", "column"], ["backgroundColor", "#FFF5F8"]]))], ["empty-cart", _pS(_uM([["flex", 1], ["display", "flex"], ["flexDirection", "column"], ["justifyContent", "center"], ["alignItems", "center"], ["paddingTop", "100rpx"], ["paddingRight", "100rpx"], ["paddingBottom", "100rpx"], ["paddingLeft", "100rpx"]]))], ["empty-icon", _pS(_uM([["width", "240rpx"], ["height", "240rpx"], ["opacity", 0.9], ["filter", "drop-shadow(0 10rpx 20rpx rgba(255, 105, 180, 0.2))"], ["animation", "float 3s ease-in-out infinite"]]))], ["empty-text", _pS(_uM([["fontSize", "32rpx"], ["color", "#B8A9C9"], ["marginTop", "40rpx"]]))], ["go-shopping", _pS(_uM([["marginTop", "60rpx"], ["paddingTop", "28rpx"], ["paddingRight", "80rpx"], ["paddingBottom", "28rpx"], ["paddingLeft", "80rpx"], ["backgroundImage", "linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%)"], ["backgroundColor", "rgba(0,0,0,0)"], ["borderTopLeftRadius", "40rpx"], ["borderTopRightRadius", "40rpx"], ["borderBottomRightRadius", "40rpx"], ["borderBottomLeftRadius", "40rpx"], ["boxShadow", "0 8rpx 24rpx rgba(255, 105, 180, 0.3)"], ["transitionProperty", "transform"], ["transitionDuration", "0.2s"], ["transform:active", "scale(0.95)"]]))], ["go-shopping-text", _pS(_uM([["fontSize", "30rpx"], ["color", "#ffffff"], ["letterSpacing", 1]]))], ["cart-list", _pS(_uM([["flex", 1], ["paddingTop", "24rpx"], ["paddingRight", "24rpx"], ["paddingBottom", "180rpx"], ["paddingLeft", "24rpx"]]))], ["cart-item", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["paddingTop", "30rpx"], ["paddingRight", "30rpx"], ["paddingBottom", "30rpx"], ["paddingLeft", "30rpx"], ["backgroundColor", "rgba(255,255,255,0.9)"], ["marginBottom", "24rpx"], ["borderTopLeftRadius", "30rpx"], ["borderTopRightRadius", "30rpx"], ["borderBottomRightRadius", "30rpx"], ["borderBottomLeftRadius", "30rpx"], ["boxShadow", "0 6rpx 20rpx rgba(255, 105, 180, 0.1)"], ["backdropFilter", "blur(10px)"], ["borderTopWidth", 1], ["borderRightWidth", 1], ["borderBottomWidth", 1], ["borderLeftWidth", 1], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "rgba(255,255,255,0.6)"], ["borderRightColor", "rgba(255,255,255,0.6)"], ["borderBottomColor", "rgba(255,255,255,0.6)"], ["borderLeftColor", "rgba(255,255,255,0.6)"]]))], ["checkbox", _pS(_uM([["width", "48rpx"], ["height", "48rpx"], ["borderTopWidth", "3rpx"], ["borderRightWidth", "3rpx"], ["borderBottomWidth", "3rpx"], ["borderLeftWidth", "3rpx"], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "#FFB6C1"], ["borderRightColor", "#FFB6C1"], ["borderBottomColor", "#FFB6C1"], ["borderLeftColor", "#FFB6C1"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"], ["marginRight", "24rpx"], ["backgroundColor", "#FFF5F8"], ["transitionProperty", "all"], ["transitionDuration", "0.2s"]]))], ["check-icon", _uM([["", _uM([["fontSize", "28rpx"], ["color", "rgba(0,0,0,0)"], ["width", "100%"], ["height", "100%"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"]])], [".checked", _uM([["backgroundImage", "linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%)"], ["backgroundColor", "rgba(0,0,0,0)"], ["color", "#ffffff"], ["boxShadow", "0 2rpx 8rpx rgba(255, 105, 180, 0.3)"]])]])], ["item-image", _pS(_uM([["width", "180rpx"], ["height", "180rpx"], ["borderTopLeftRadius", "24rpx"], ["borderTopRightRadius", "24rpx"], ["borderBottomRightRadius", "24rpx"], ["borderBottomLeftRadius", "24rpx"], ["borderTopWidth", "4rpx"], ["borderRightWidth", "4rpx"], ["borderBottomWidth", "4rpx"], ["borderLeftWidth", "4rpx"], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "#FFF0F5"], ["borderRightColor", "#FFF0F5"], ["borderBottomColor", "#FFF0F5"], ["borderLeftColor", "#FFF0F5"], ["boxShadow", "0 4rpx 12rpx rgba(0,0,0,0.05)"]]))], ["item-info", _pS(_uM([["flex", 1], ["marginLeft", "24rpx"], ["display", "flex"], ["flexDirection", "column"], ["height", "180rpx"], ["justifyContent", "space-between"]]))], ["item-name", _pS(_uM([["fontSize", "30rpx"], ["color", "#5D4E6D"], ["fontWeight", "700"], ["lineHeight", 1.4]]))], ["item-price", _pS(_uM([["fontSize", "36rpx"], ["color", "#FF69B4"]]))], ["quantity-box", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["backgroundColor", "#FFF0F5"], ["borderTopLeftRadius", "30rpx"], ["borderTopRightRadius", "30rpx"], ["borderBottomRightRadius", "30rpx"], ["borderBottomLeftRadius", "30rpx"], ["paddingTop", "4rpx"], ["paddingRight", "4rpx"], ["paddingBottom", "4rpx"], ["paddingLeft", "4rpx"], ["alignSelf", "flex-start"]]))], ["qty-btn", _pS(_uM([["width", "56rpx"], ["height", "56rpx"], ["backgroundColor", "#FFFFFF"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"], ["boxShadow", "0 2rpx 6rpx rgba(0,0,0,0.05)"], ["backgroundColor:active", "#FFE4EC"]]))], ["qty-btn-text", _pS(_uM([["fontSize", "32rpx"], ["color", "#FF69B4"], ["fontWeight", "bold"]]))], ["qty-num", _pS(_uM([["fontSize", "28rpx"], ["color", "#5D4E6D"], ["paddingTop", 0], ["paddingRight", "24rpx"], ["paddingBottom", 0], ["paddingLeft", "24rpx"], ["fontWeight", "bold"], ["minWidth", "40rpx"], ["textAlign", "center"]]))], ["delete-btn", _pS(_uM([["paddingTop", "20rpx"], ["paddingRight", "20rpx"], ["paddingBottom", "20rpx"], ["paddingLeft", "20rpx"], ["opacity", 0.6], ["transitionProperty", "opacity"], ["transitionDuration", "0.2s"], ["opacity:active", 1]]))], ["delete-icon", _pS(_uM([["width", "44rpx"], ["height", "44rpx"]]))], ["checkout-bar", _pS(_uM([["position", "fixed"], ["bottom", CSS_VAR_WINDOW_BOTTOM], ["left", 0], ["right", 0], ["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["paddingTop", "24rpx"], ["paddingRight", "30rpx"], ["paddingBottom", "24rpx"], ["paddingLeft", "30rpx"], ["marginTop", "24rpx"], ["marginRight", "24rpx"], ["marginBottom", "24rpx"], ["marginLeft", "24rpx"], ["backgroundColor", "rgba(255,255,255,0.95)"], ["borderTopLeftRadius", "40rpx"], ["borderTopRightRadius", "40rpx"], ["borderBottomRightRadius", "40rpx"], ["borderBottomLeftRadius", "40rpx"], ["boxShadow", "0 -4rpx 30rpx rgba(255, 105, 180, 0.2)"], ["zIndex", 100], ["backdropFilter", "blur(10px)"], ["borderTopWidth", 1], ["borderRightWidth", 1], ["borderBottomWidth", 1], ["borderLeftWidth", 1], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "rgba(255,255,255,0.5)"], ["borderRightColor", "rgba(255,255,255,0.5)"], ["borderBottomColor", "rgba(255,255,255,0.5)"], ["borderLeftColor", "rgba(255,255,255,0.5)"]]))], ["select-all", _pS(_uM([["display", "flex"], ["flexDirection", "row"], ["alignItems", "center"], ["paddingTop", 0], ["paddingRight", "20rpx"], ["paddingBottom", 0], ["paddingLeft", "20rpx"]]))], ["checkbox-icon", _uM([["", _uM([["width", "44rpx"], ["height", "44rpx"], ["borderTopWidth", "3rpx"], ["borderRightWidth", "3rpx"], ["borderBottomWidth", "3rpx"], ["borderLeftWidth", "3rpx"], ["borderTopStyle", "solid"], ["borderRightStyle", "solid"], ["borderBottomStyle", "solid"], ["borderLeftStyle", "solid"], ["borderTopColor", "#FFB6C1"], ["borderRightColor", "#FFB6C1"], ["borderBottomColor", "#FFB6C1"], ["borderLeftColor", "#FFB6C1"], ["display", "flex"], ["justifyContent", "center"], ["alignItems", "center"], ["fontSize", "24rpx"], ["color", "#FFF5F8"], ["backgroundColor", "#FFF5F8"], ["transitionProperty", "all"], ["transitionDuration", "0.2s"]])], [".checked", _uM([["backgroundImage", "linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%)"], ["backgroundColor", "rgba(0,0,0,0)"], ["borderTopColor", "#FF69B4"], ["borderRightColor", "#FF69B4"], ["borderBottomColor", "#FF69B4"], ["borderLeftColor", "#FF69B4"], ["color", "#ffffff"], ["boxShadow", "0 2rpx 8rpx rgba(255, 105, 180, 0.3)"]])]])], ["select-all-text", _pS(_uM([["fontSize", "28rpx"], ["color", "#5D4E6D"], ["marginLeft", "16rpx"]]))], ["total-info", _pS(_uM([["flex", 1], ["display", "flex"], ["flexDirection", "row"], ["justifyContent", "flex-end"], ["paddingRight", "24rpx"]]))], ["total-label", _pS(_uM([["fontSize", "28rpx"], ["color", "#B8A9C9"]]))], ["total-amount", _pS(_uM([["fontSize", "40rpx"], ["color", "#FF69B4"], ["marginLeft", "10rpx"]]))], ["checkout-btn", _pS(_uM([["paddingTop", "24rpx"], ["paddingRight", "48rpx"], ["paddingBottom", "24rpx"], ["paddingLeft", "48rpx"], ["backgroundImage", "linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%)"], ["backgroundColor", "rgba(0,0,0,0)"], ["borderTopLeftRadius", "30rpx"], ["borderTopRightRadius", "30rpx"], ["borderBottomRightRadius", "30rpx"], ["borderBottomLeftRadius", "30rpx"], ["boxShadow", "0 6rpx 20rpx rgba(255, 105, 180, 0.4)"], ["transitionProperty", "transform"], ["transitionDuration", "0.2s"], ["transform:active", "scale(0.95)"]]))], ["checkout-text", _pS(_uM([["fontSize", "30rpx"], ["color", "#ffffff"], ["letterSpacing", 1]]))], ["@FONT-FACE", _uM([["0", _uM([])]])], ["@TRANSITION", _uM([["go-shopping", _uM([["property", "transform"], ["duration", "0.2s"]])], ["checkbox", _uM([["property", "all"], ["duration", "0.2s"]])], ["delete-btn", _uM([["property", "opacity"], ["duration", "0.2s"]])], ["checkbox-icon", _uM([["property", "all"], ["duration", "0.2s"]])], ["checkout-btn", _uM([["property", "transform"], ["duration", "0.2s"]])]])]])];
